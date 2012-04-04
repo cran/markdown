@@ -1,0 +1,8 @@
+export(
+   "markdownExtensions",
+   "markdownHTMLOptions",
+   "markdownToHTML",
+   "rendererExists",
+   "renderMarkdown"
+)
+useDynLib(markdown,.registration=TRUE)
