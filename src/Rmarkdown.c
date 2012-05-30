@@ -13,11 +13,8 @@
 
 #include "Rmarkdown.h"
 
-#define READ_UNIT 1024
-#define OUTPUT_UNIT 64
-#define RMD_WARNING_NOMEM warning("Out of memory!")
-
 #define NREND 8
+
 static struct rmd_renderer RENDERERS[NREND];
 
 static struct rmd_renderer *renderer(const char *name);
@@ -54,8 +51,8 @@ static Rboolean render_to_html(struct buf *ib, struct buf *ob,
                         "STRIKETHROUGH") == 0)
             exts |= MKDEXT_STRIKETHROUGH;
          else if (strcasecmp(CHAR(STRING_ELT(Sextensions,i)),
-                        "LAX_HTML_BLOCKS") == 0)
-            exts |= MKDEXT_LAX_HTML_BLOCKS;
+                        "LAX_SPACING") == 0)
+            exts |= MKDEXT_LAX_SPACING;
          else if (strcasecmp(CHAR(STRING_ELT(Sextensions,i)),
                         "SPACE_HEADERS") == 0)
             exts |= MKDEXT_SPACE_HEADERS;
@@ -189,6 +186,12 @@ void rmd_init_renderer_list()
    html = &RENDERERS[0];
    html->name = "HTML";
    html->render = render_to_html;
+   html->output_type = "character";
+}
+
+Rboolean rmd_renderer_exists(const char *name)
+{
+   return (renderer(name) != NULL)? TRUE: FALSE;
 }
 
 Rboolean rmd_register_renderer(struct rmd_renderer *renderer)
@@ -210,14 +213,19 @@ Rboolean rmd_register_renderer(struct rmd_renderer *renderer)
    }
 
    /* replace old renderer without warning */
-   if (name_exists>0)
+   if (name_exists>=0)
       empty_slot = name_exists;
 
-   if (empty_slot>0)
+   if (empty_slot>=0)
    {
-      if (name_exists<0)
-         RENDERERS[empty_slot].name = strdup(renderer->name);
+      if (RENDERERS[empty_slot].name != NULL)
+      {
+         free(RENDERERS[empty_slot].name);
+         free(RENDERERS[empty_slot].output_type);
+      }
+      RENDERERS[empty_slot].name = strdup(renderer->name);
       RENDERERS[empty_slot].render = renderer->render;
+      RENDERERS[empty_slot].output_type = strdup(renderer->output_type);
    }
    else
    {
@@ -227,21 +235,33 @@ Rboolean rmd_register_renderer(struct rmd_renderer *renderer)
    return TRUE;
 }
 
-SEXP rmd_renderer_exists(SEXP Srenderer)
+SEXP rmd_registered_renderers(void)
 {
    SEXP ans;
+   SEXP names;
+   char *name, *output_type; 
 
-   PROTECT(ans = allocVector(LGLSXP,1));
-   LOGICAL(ans)[0] = FALSE;
-
-   if (isString(Srenderer))
+   PROTECT(ans = allocVector(STRSXP,NREND));
+   PROTECT(names = allocVector(STRSXP,NREND));
+   int i;
+   for (i=0;i<NREND;i++)
    {
-      const char *name = CHAR(STRING_ELT(Srenderer,0));
-      if (renderer(name) != NULL)
-         LOGICAL(ans)[0] = TRUE;
+      if (RENDERERS[i].name != NULL)
+      {
+         name = RENDERERS[i].name;
+         output_type = RENDERERS[i].output_type;
+
+      } else {
+         name = "";
+         output_type = "";
+      }
+
+      SET_STRING_ELT(ans,i,mkChar(name));
+      SET_STRING_ELT(names,i,mkChar(output_type));
    }
 
-   UNPROTECT(1);
+   setAttrib(ans,R_NamesSymbol,names);
+   UNPROTECT(2);
 
    return ans;
 }
@@ -345,7 +365,7 @@ SEXP rmd_render_markdown(SEXP Sfile, SEXP Soutput, SEXP Stext, SEXP Srenderer,
 
    name = CHAR(STRING_ELT(Srenderer,0));
 
-   if (!LOGICAL(rmd_renderer_exists(Srenderer))[0])
+   if (!rmd_renderer_exists(name))
    {
       error("Renderer '%s' not registered!",name);
       return R_NilValue;

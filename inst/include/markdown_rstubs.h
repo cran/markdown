@@ -14,6 +14,8 @@
 #ifndef MARKDOWN_RSTUBS
 #define MARKDOWN_RSTUBS
 
+#include <Rinternals.h>
+#include <R_ext/Rdynload.h>
 #include "markdown.h"
 
 #ifdef __cplusplus
@@ -112,10 +114,10 @@ struct rmd_renderer {
 Rboolean rstub_rmd_register_renderer(struct rmd_renderer *);
 #define rmd_register_renderer rstub_rmd_register_renderer
 
-SEXP rstub_rmd_renderer_exists(SEXP);
+Rboolean rstub_rmd_renderer_exists(const char *);
 #define rmd_renderer_exists rstub_rmd_renderer_exists
 
-Rboolean rstub_rmd_buf_to_output(struct buf *, SEXP, SEXP);
+Rboolean rstub_rmd_buf_to_output(struct buf *, SEXP, SEXP *);
 #define rmd_buf_to_output rstub_rmd_buf_to_output
 
 Rboolean rstub_rmd_input_to_buf(SEXP, SEXP, struct buf *);

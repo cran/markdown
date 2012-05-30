@@ -1,8 +1,8 @@
 \name{markdownExtensions}
 \alias{markdownExtensions}
-\title{Markdown exensions}
+\title{Markdown extensions}
 \description{
-   \code{markdownExensions} returns a character vector listing all 
+   \code{markdownExtensions} returns a character vector listing all 
    the extensions that are available in the \code{markdown} package.
 
    They are all ON by default.
@@ -45,7 +45,7 @@ Content Cell  | Content Cell
          }
       }
 
-      \item{\code{'fenced_code'}}{ treat text as verbim when surrounded with
+      \item{\code{'fenced_code'}}{ treat text as verbatim when surrounded with
          begin and ending lines with three ~ or \emph{`} characters.
       }
 
@@ -54,10 +54,10 @@ Content Cell  | Content Cell
       }
 
       \item{\code{'strikethrough'}}{
-         create strikethrouhs by surrounding text with ~~.
+         create strikethroughs by surrounding text with ~~.
       }
 
-      \item{\code{'lax_html_blocks'}}{
+      \item{\code{'lax_spacing'}}{
          allow HTML tags inside paragraphs without being surrounded 
          by newlines.
       }
@@ -121,14 +121,14 @@ Content Cell  | Content Cell
 # fenced_code example (need at lest three leading ~ or `)
 cat(markdownToHTML(text="
 ~~~
-preformated text here without having to indent
+preformatted text here without having to indent
 first line.
 ~~~
 ",extensions=c()))
 
 cat(markdownToHTML(text="
 ```
-preformated text here without having to indent
+preformatted text here without having to indent
 first line.
 ```
 ",extensions=c('fenced_code')))
@@ -142,7 +142,7 @@ cat(markdownToHTML(text="http://www.r-project.org/",
 cat(markdownToHTML(text="~~awesome~~",extensions=c()))
 cat(markdownToHTML(text="~~awesome~~",extensions=c('strikethrough')))
 
-# lax_html_blocks
+# lax_spacing
 cat(markdownToHTML(text="
 Embedding html without surrounding with empty newline.
 <div>_markdown_</div>
@@ -152,7 +152,7 @@ cat(markdownToHTML(text="
 Embedding html without surrounding with empty newline.
 <div>_markdown_</div>
 extra text.
-",extensions=c('lax_html_blocks')))
+",extensions=c('lax_spacing')))
 
 # space_headers example
 cat(markdownToHTML(text="
