@@ -1,9 +1,9 @@
-a616c2638d07de0e3b26898f6df9e1bd *DESCRIPTION
+be73e8dc5a47388de389d50cfcc61103 *DESCRIPTION
 4fa4d9888f7512df00f07e7ddff78694 *NAMESPACE
-6a3feaccf3961f4074b55d36dbe85eed *NEWS
-103abd95b305422f3c8d81f0a7d19f8c *R/guid.R
-c76d82e1ff607edc7477e8b751af23e1 *R/renderMarkdown.R
-f8de4c75e2f145457e7c0e551c7b755f *R/rpubsUpload.R
+3dccdee4fac0777e8e7dfe9144f5a893 *NEWS
+5a26d709494f0ff6b96781995dd9a9df *R/guid.R
+9267ad1302cc94e44a4efb61949de808 *R/renderMarkdown.R
+ab4e39d99c3c985a03503d887ca151a8 *R/rpubsUpload.R
 5ce2d2c712f22a34ee10361b9656b843 *inst/COPYING
 4907458964894cb1dcc67c4f5690a48b *inst/NOTICE
 217470548085b204b2e167eaef5f848e *inst/RnwToMd.R
@@ -16,9 +16,9 @@ f1aa907d39bc36c196ac42b913e1b63a *inst/resources/markdown.css
 4919cc73dc7e09173c0fd5a29a09db7a *inst/resources/markdown.html
 783452fbc5f28b093a1808a40359321a *inst/resources/mathjax.html
 4b4680363f66d1f20f7d9be6063738be *inst/resources/r_highlight.html
-4ce92acf42050b981eaeac38b4e44a5d *man/markdown.Rd
-7346415bb5f0fb49b916492ef04bce2d *man/markdownExtensions.Rd
-e384f25dda3fbdb5af184a3fbf1b0541 *man/markdownHTMLOptions.Rd
+4e0187b0f6e7d7ce3b1530ac52dd747f *man/markdown.Rd
+cf2eafda8634c520a519ab1e5e0a68c2 *man/markdownExtensions.Rd
+f5ddba0e6c36abfef43c6da7274ae573 *man/markdownHTMLOptions.Rd
 66e46d45ffdc6182cf32ebe977e7fc83 *man/markdownToHTML.Rd
 fc7fbb16a8a341f2a576844a3f8801f5 *man/registeredRenderers.Rd
 c3f64825d0a86911a309c2d2391ad7f7 *man/renderMarkdown.Rd
