@@ -30,75 +30,6 @@ rendererOutputType <- function(name)
    names(which(rnds==name[1]))
 }
 
-.filterMath <- function(file,text)
-{
-   gg <- .GUIDgenerator()
-
-   if (!is.null(file))
-      text <- paste(readLines(file),collapse='\n')
-
-   if (nchar(text)==0)
-      stop("Input is empty!")
-
-   mFilter <- list(text=text, mathEnv=new.env(hash=TRUE))
-
-   regexprs <- list(
-                  list(
-                     pat="\\${2}latex(\\s[\\s\\S]+?)\\${2}",
-                     repl="\\\\[\\1\\\\]"
-                  ),
-                  list(
-                     pat="\\$latex(\\s[\\s\\S]+?)\\$",
-                     repl="\\\\(\\1\\\\)"
-                  )
-               )
-
-   for (r in regexprs)
-   {
-      matches <- gregexpr(r$pat,mFilter$text,perl=TRUE)
-      if (matches[[1]][1] != -1)
-      {
-         guids <- unlist(lapply(seq_along(matches[[1]]),function(i)gg$GUID()))
-         guidStr <- regmatches(mFilter$text,matches)[[1]]
-         lapply(
-            seq_along(guids),
-            function(i)
-            {
-               assign(
-                  guids[i],
-                  sub(r$pat,r$repl,guidStr[i],perl=TRUE),
-                  mFilter$mathEnv
-               )
-            }
-         )
-         tmpText <- mFilter$text
-         regmatches(tmpText,matches) <- list(guids)
-         mFilter$text <- tmpText
-      }
-   }
-
-   mFilter
-}
-
-.unfilterMath <- function(mFilter)
-{
-
-   text <- mFilter$text
-
-   for (s in ls(envir=mFilter$mathEnv))
-   {
-      text <- sub(s,get(s,mFilter$mathEnv),text,fixed=TRUE)
-   }
-
-   if (!is.null(mFilter$outputFile))
-   {
-      cat(text,file=mFilter$outputFile)
-      NULL
-   }
-   else
-      text
-}
-
 renderMarkdown <-
 function(file, output, text, renderer='HTML', renderer.options=NULL,
          extensions=getOption('markdown.extensions'))
@@ -144,39 +75,8 @@ function(file, output, text, renderer='HTML', renderer.options=NULL,
          stop("HTML options must be a character vector")
    }
 
-   # Extensions must be a character vector
-   if (!is.null(extensions) && !is.character(extensions))
-      stop("extensions must be a character vector")
-
-   if ('ignore_math' %in% extensions)
-   {
-      if (rendererOutputType(renderer) != 'character')
-      {
-         warning("Ignoring extension 'ignore_math'. Only works for renderers that output text.")
-      } 
-      else
-      {
-         mFilter <- .filterMath(file,text)
-         text <- mFilter$text
-         file <- NULL
-         if (!is.null(output))
-         {
-            mFilter$outputFile <- output
-            output <- NULL
-         }
-
-      }
-   }
-
    ret <- .Call(rmd_render_markdown,file,output,text,renderer,
                    renderer.options, extensions)
-
-   if ('ignore_math' %in% extensions && 
-       rendererOutputType(renderer)=='character')
-   {
-      mFilter$text <- rawToChar(ret);
-      ret <- .unfilterMath(mFilter)
-   }
 
    if (is.raw(ret) && rendererOutputType(renderer)=='character')
       ret <- rawToChar(ret)
@@ -259,25 +159,30 @@ markdownToHTML <- function(file, output, text,
                            options=getOption('markdown.HTML.options'),
                            extensions=getOption('markdown.extensions'),
                            title='', 
-         stylesheet=system.file('resources/markdown.css',package='markdown'),
+                           stylesheet=getOption('markdown.HTML.stylesheet'),
                            fragment.only=FALSE)
 {
    if (fragment.only==TRUE)
       options <- c(options,'fragment_only')
 
-   if (!'fragment_only' %in% options)
+   if (!missing(output))
    {
-      if (!missing(output))
-      {
-         outputFile <- output
-         output <- NULL
-      } 
-      else
-         outputFile <- NULL
-   }
+      outputFile <- output
+      output <- NULL
+   } 
+   else
+      outputFile <- NULL
 
    ret <- renderMarkdown(file,output,text,renderer="HTML",
                   renderer.options=options,extensions=extensions)
+
+   if ('base64_images' %in% options){
+      if (!missing(file) && is.character(file) && file.exists(file)){
+         oldwd <- setwd(dirname(file))
+         on.exit(setwd(oldwd))
+      }
+      ret <- .b64EncodeImages(ret);
+   }
 
    if (!'fragment_only' %in% options)
    {
@@ -287,14 +192,15 @@ markdownToHTML <- function(file, output, text,
 
       if (is.character(stylesheet)){
 
-         # TODO - what to do if user misspelled file name?
+         # what to do if user misspelled file name?
          if (file.exists(stylesheet))
             stylesheet <- paste(readLines(stylesheet),collapse='\n')
 
+         # presume the character vector contains CSS.
          html <- sub('#!markdown_css#',stylesheet,html,fixed=TRUE)
 
       } else {
-        warning("stylsheet must either be valid CSS or a file containint CSS!")
+        warning("stylesheet must either be valid CSS or a file containint CSS!")
       }
 
       if (!is.character(title) || title == '')
@@ -327,18 +233,13 @@ markdownToHTML <- function(file, output, text,
       }
       html <- sub("#!mathjax#",mathjax,html,fixed=TRUE)
 
-      if ('base64_images' %in% options){
-         if (!missing(file) && is.character(file) && file.exists(file)){
-            oldwd <- setwd(dirname(file))
-            on.exit(setwd(oldwd))
-         }
-         html <- .b64EncodeImages(html);
-      }
+      ret <- html
+   }
 
-      if (is.character(outputFile))
-         cat(html,file=outputFile)
-      else
-         ret <- html
+   if (is.character(outputFile))
+   {
+      cat(ret,file=outputFile)
+      ret <- NULL
    }
 
    invisible(ret)
@@ -388,7 +289,7 @@ smartypants <- function(file,output,text)
 markdownExtensions <- function()
 {
    c('no_intra_emphasis','tables','fenced_code','autolink','strikethrough',
-     'lax_spacing','space_headers','superscript','ignore_math')
+     'lax_spacing','space_headers','superscript','latex_math')
 }
 
 # HTML renderer options.
@@ -425,4 +326,9 @@ markdownHTMLOptions <- function(defaults=FALSE)
 
    if (is.null(getOption('markdown.HTML.options')))
       options(markdown.HTML.options=markdownHTMLOptions(defaults=TRUE))
+
+   if (is.null(getOption('markdown.HTML.stylesheet'))){
+      sheet <- system.file('resources/markdown.css',package='markdown')
+      options(markdown.HTML.stylesheet=sheet)
+   }
 }
