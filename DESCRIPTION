@@ -1,8 +1,8 @@
 Package: markdown
 Type: Package
 Title: Markdown rendering for R
-Version: 0.5.2
-Date: 2012-06-19
+Version: 0.5.3
+Date: 2012-11-05
 Author: JJ Allaire, Jeffrey Horner, Vicent Marti, and Natacha Porte
 Maintainer: Jeffrey Horner <jeffrey.horner@gmail.com>
 Description: Markdown is a plain-text formatting syntax that can be
@@ -11,6 +11,6 @@ Description: Markdown is a plain-text formatting syntax that can be
 Depends: R (>= 2.11.1)
 Suggests: RCurl
 License: GPL-3
-Packaged: 2012-06-26 06:35:00 UTC; ripley
+Packaged: 2012-11-05 20:00:20 UTC; hornerj
 Repository: CRAN
-Date/Publication: 2012-06-26 06:35:47
+Date/Publication: 2012-11-06 07:07:46
