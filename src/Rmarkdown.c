@@ -358,6 +358,80 @@ Rboolean rmd_buf_to_output(struct buf *ob, SEXP Soutput, SEXP *raw_vec)
    return TRUE;
 }
 
+/* Pandoc title blocks are prepended with percents '%'. They start on the
+ * first line of the document and contain 3 elements: 'title','author', 
+ * and date. Both 'title' and 'author' can extend to multiple lines so
+ * long as that line starts with a space, but 'date' cannot.
+ */
+void skip_pandoc_title_block(struct buf *ib){
+	int i = 0;
+   size_t pos = 0;
+
+   /* pandoc 1.9.1.1 expects title blocks to start on the first line */
+   if (ib->data[0] != '%') return;
+
+   /* We search for at most 3 elements: title, author, and date */
+   for (i = 0; i < 3; i++){
+      if (ib->data[pos] != '%') break;
+
+      /* Search for end of line */
+      while (pos < ib->size && ib->data[pos] != '\n') pos++;
+      if (pos < ib->size) pos++;
+      else break;
+
+      do {
+         /* Only title and author can contain continuation lines,
+          * e.g. i < 2 
+          */
+         if (ib->data[pos] == ' ' && i < 2){
+            while (pos < ib->size && ib->data[pos] != '\n') pos++;
+            if (pos < ib->size) pos++;
+            else break;
+         } else {
+            break;
+         }
+      } while(1);
+   }
+
+   /* If we've seen a title block, we'll take it off
+    * the beginning of our buffer by slurping up pos bytes.
+    */
+   if (pos > 0) bufslurp(ib,pos);
+}
+
+/* Jekyll front matter begins on the first line and the first three characters
+ * of the line are '---'. Front matter ends when a line is started with '---'.
+ * We skip everything in between including the ending '---'.
+ */
+void skip_jekyll_front_matter(struct buf *ib){
+	int i = 0; int front_matter_found = 0;
+   size_t pos = 0;
+
+   /* Jekyll 0.12.0 expects front matter to start on the first line */
+   if (ib->size < 3 || !(ib->data[0] == '-' && ib->data[1] == '-' && 
+      ib->data[2] == '-') ) return;
+
+   pos = 3;
+   do {
+      while (pos < ib->size && ib->data[pos] != '\n') pos++;
+      if (pos == ib->size) break;
+      if (pos+3 < ib->size){
+         if (ib->data[pos+1] == '-' && ib->data[pos+2] == '-' && ib->data[pos+3] == '-'){
+            front_matter_found = 1;
+            pos += 4;
+            break;
+         } else {
+            pos++;
+         }
+      } else {
+         break;
+      }
+   } while(1);
+
+   if (front_matter_found && pos > 0)
+      bufslurp(ib,pos);
+}
+
 SEXP rmd_render_markdown(SEXP Sfile, SEXP Soutput, SEXP Stext, SEXP Srenderer,
                             SEXP Soptions, SEXP Sextensions)
 {
@@ -384,6 +458,9 @@ SEXP rmd_render_markdown(SEXP Sfile, SEXP Soutput, SEXP Stext, SEXP Srenderer,
       bufrelease(ib);
       error("Input error!");
    }
+
+   skip_pandoc_title_block(ib);
+   skip_jekyll_front_matter(ib);
 
    ob = bufnew(OUTPUT_UNIT);
    if (!ob)

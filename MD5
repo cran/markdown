@@ -1,6 +1,6 @@
-735487fd490e13ef277789df61b1f898 *DESCRIPTION
+76b14d55a595198cfcb02f8a13b53cd2 *DESCRIPTION
 4fa4d9888f7512df00f07e7ddff78694 *NAMESPACE
-e192982b3b8c07f328aa0dd8d40d9423 *NEWS
+b22a20ba6f458eaecf3d2f442fcc155b *NEWS
 fc770c0c131a573b25f1a68cf1de20d5 *R/renderMarkdown.R
 3ee180510a4c3e18fae6c2b9b4acc0f1 *R/rpubsUpload.R
 5ce2d2c712f22a34ee10361b9656b843 *inst/COPYING
@@ -27,7 +27,7 @@ ac2419226ebea18df1f163020ec24283 *man/rendererOutputType.Rd
 e6b89e128e596330e756d81db673b7a0 *man/smartypants.Rd
 607ed1ee44e4be0c9a35af6c1686e11f *src/Rbase64.c
 2f834c6f45186d54f16c0fedd375c162 *src/Rinit.c
-b07c6eefb3ecc2970c52d0a325000b55 *src/Rmarkdown.c
+9e3cdeec24d2d156aab656da7b722b61 *src/Rmarkdown.c
 5d077e6cb69564429063e3f63f8dd09e *src/Rmarkdown.h
 26fcef5aabe22c64142adb48c2a87cf5 *src/autolink.c
 4ba2610d0919031a909bf50306bfc533 *src/autolink.h
