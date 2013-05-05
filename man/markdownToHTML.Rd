@@ -15,8 +15,8 @@
       $latex ... $ , $$ ... $$, or \\[ ... \\], or one of the inline syntaxes,
       $...$, or \\( ... \),
       will be rendered in real-time by the MathJax Javascript library.
-   \item \emph{R} code blocks enclosed by ```r ... \\n``` will automatically
-      be syntax highlighted.
+   \item \emph{R} code blocks enclosed between \verb{```r} and \verb{```} will
+      automatically be syntax highlighted.
    \item Any local images linked using the <img> tag will be base64 encoded and
       included in the output HTML.
    }
@@ -31,6 +31,7 @@ markdownToHTML(file, output, text,
                         extensions=getOption('markdown.extensions'),
                         title='', 
                         stylesheet=getOption('markdown.HTML.stylesheet'),
+                        header='',
                         fragment.only=FALSE)
 }
 \arguments{
@@ -49,6 +50,8 @@ markdownToHTML(file, output, text,
    \item{title}{The HTML title.}
    \item{stylesheet}{either valid CSS or a file containing CSS. will be 
       included in the output.}
+   \item{header}{either valid HTML or a file containing HTML will be 
+      included in the header of the output.}
    \item{fragment.only}{Whether or not to produce an HTML fragment without 
       the HTML header and body tags, CSS, and Javascript components.}
 }
@@ -82,7 +85,7 @@ markdownToHTML(file, output, text,
 
 \examples{
 
-print(markdownToHTML(text='Hello World!'))
+print(markdownToHTML(text = "Hello World!"))
 
 }
 \keyword{programming}

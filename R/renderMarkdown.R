@@ -165,7 +165,7 @@ function(file, output, text, renderer='HTML', renderer.options=NULL,
 
 .mimeType <- function(f){
    f <- f[1]
-   fileExt <- function (x) 
+   fileExt <- function (x)
    {
       pos <- regexpr("\\.([[:alnum:]]+)$", x)
       ifelse(pos > -1L, tolower(substring(x, pos + 1L)), "")
@@ -197,9 +197,10 @@ function(file, output, text, renderer='HTML', renderer.options=NULL,
    {
       .b64EncodeImgSrc <- function(imgSrc)
       {
-         inFile <- sub(reg,"\\1",imgSrc)
+         src <- sub(reg,"\\1",imgSrc)
+         inFile <- URLdecode(src)
          if (length(inFile) && file.exists(inFile))
-            imgSrc <- sub(inFile,.b64EncodeFile(inFile),imgSrc,fixed=TRUE)
+            imgSrc <- sub(src,.b64EncodeFile(inFile),imgSrc,fixed=TRUE)
 
          imgSrc
       }
@@ -237,6 +238,7 @@ markdownToHTML <- function(file, output, text,
                            extensions=getOption('markdown.extensions'),
                            title='', 
                            stylesheet=getOption('markdown.HTML.stylesheet'),
+                           header=getOption('markdown.HTML.header', ''),
                            fragment.only=FALSE)
 {
    if (fragment.only==TRUE)
@@ -246,7 +248,7 @@ markdownToHTML <- function(file, output, text,
    {
       outputFile <- output
       output <- NULL
-   } 
+   }
    else
       outputFile <- NULL
 
@@ -254,11 +256,14 @@ markdownToHTML <- function(file, output, text,
                   renderer.options=options,extensions=extensions)
 
    if ('base64_images' %in% options){
-      if (!missing(file) && is.character(file) && file.exists(file)){
-         oldwd <- setwd(dirname(file))
-         on.exit(setwd(oldwd))
-      }
-      ret <- .b64EncodeImages(ret);
+       filedir <- if (!missing(file) && is.character(file) && file.exists(file)) {
+           dirname(file)
+       } else '.'
+       ret <- local({
+           oldwd <- setwd(filedir)
+           on.exit(setwd(oldwd))
+           .b64EncodeImages(ret)
+       })
    }
 
    if (!'fragment_only' %in% options)
@@ -277,8 +282,15 @@ markdownToHTML <- function(file, output, text,
          html <- sub('#!markdown_css#',stylesheet,html,fixed=TRUE)
 
       } else {
-        warning("stylesheet must either be valid CSS or a file containint CSS!")
+        warning("stylesheet must either be valid CSS or a file containing CSS!")
       }
+
+      if (is.character(header)){
+         # what to do if user misspelled file name?
+         if (file.exists(header))
+            header <- paste(readLines(header),collapse='\n')
+      }
+      html <- sub('#!header#',header,html,fixed=TRUE)
 
       if (!is.character(title) || title == '')
       {
