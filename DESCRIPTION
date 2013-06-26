@@ -1,8 +1,8 @@
 Package: markdown
 Type: Package
 Title: Markdown rendering for R
-Version: 0.6
-Date: 2013-06-19
+Version: 0.6.1
+Date: 2013-06-26
 Author: JJ Allaire, Jeffrey Horner, Vicent Marti, and Natacha Porte
 Maintainer: Yihui Xie <xie@yihui.name>
 Description: Markdown is a plain-text formatting syntax that can be
@@ -10,12 +10,12 @@ Description: Markdown is a plain-text formatting syntax that can be
         bindings to the Sundown markdown rendering library.
 Depends: R (>= 2.11.1)
 Suggests: knitr, RCurl
-License: GPL
+License: GPL-2
 URL: https://github.com/rstudio/markdown
 BugReports: https://github.com/rstudio/markdown/issues
 VignetteBuilder: knitr
 Collate: 'renderMarkdown.R' 'rpubsUpload.R' 'markdown-package.R'
-Packaged: 2013-06-18 22:41:13 UTC; yihui
+Packaged: 2013-06-26 22:17:03 UTC; yihui
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2013-06-19 00:54:09
+Date/Publication: 2013-06-27 06:53:04
