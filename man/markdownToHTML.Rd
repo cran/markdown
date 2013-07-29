@@ -2,10 +2,14 @@
 \alias{markdownToHTML}
 \title{Render markdown to HTML}
 \usage{
-markdownToHTML(file, output, text, options = getOption("markdown.HTML.options"), 
-    extensions = getOption("markdown.extensions"), title = "", 
-    stylesheet = getOption("markdown.HTML.stylesheet"), 
-    header = getOption("markdown.HTML.header", ""), fragment.only = FALSE)
+  markdownToHTML(file, output, text,
+    options = getOption("markdown.HTML.options"),
+    extensions = getOption("markdown.extensions"),
+    title = "",
+    stylesheet = getOption("markdown.HTML.stylesheet"),
+    header = getOption("markdown.HTML.header"),
+    template = getOption("markdown.HTML.template"),
+    fragment.only = FALSE)
 }
 \arguments{
   \item{file}{a character string giving the pathname of the
@@ -15,11 +19,12 @@ markdownToHTML(file, output, text, options = getOption("markdown.HTML.options"),
 
   \item{output}{a character string giving the pathname of
   the file to write to.  If it is omitted, then it is
-  presumed that the use expects the results returned as a
-  \code{"raw"} vector.}
+  presumed that the user expects the results returned as a
+  \code{raw} vector.}
 
   \item{text}{a character vector containing the
-  \emph{markdown} text to transform.}
+  \emph{markdown} text to transform (each element of this
+  vector is treated as a line in a file).}
 
   \item{options}{options that are passed to the renderer.
   see \code{\link{markdownHTMLOptions}}.}
@@ -36,20 +41,22 @@ markdownToHTML(file, output, text, options = getOption("markdown.HTML.options"),
   \item{header}{either valid HTML or a file containing HTML
   will be included in the header of the output.}
 
+  \item{template}{an HTML file used as template.}
+
   \item{fragment.only}{Whether or not to produce an HTML
   fragment without the HTML header and body tags, CSS, and
   Javascript components.}
 }
 \value{
   \code{renderMarkdown} returns NULL invisibly when output
-  is to a file, and a \code{"character"} vector otherwise.
+  is to a file, and a \code{character} vector otherwise.
 }
 \description{
   \code{markdownToHTML} transforms the \emph{markdown} text
   provided by the user in either the \code{file} or
   \code{text} variable. The HTML transformation is either
   written to the \code{output} file or returned to the user
-  as a \code{"character"} vector.
+  as a \code{character} vector.
 }
 \details{
   Three notable HTML options have been added to support
@@ -83,7 +90,8 @@ markdownToHTML(file, output, text, options = getOption("markdown.HTML.options"),
   header, title, and body tags. The default template used
   for this mode may be found here:
 
-  system.file('resources/markdown.html',package='markdown')
+  \code{system.file('resources', 'markdown.html', package =
+  'markdown')}
 
   Also, \code{markdownToHTML} will automatically determine
   whether or not mathjax and R code highlighting are needed
