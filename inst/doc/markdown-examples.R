@@ -19,7 +19,6 @@ library(markdown)
 
 
 ## ----include=FALSE-------------------------------------------------------
-options(markdown.HTML.header = system.file('misc', 'vignette.css', package='knitr'),
-        markdown.HTML.options=markdownHTMLOptions(defaults=TRUE))
+options(markdown.HTML.options=markdownHTMLOptions(defaults=TRUE))
 
 

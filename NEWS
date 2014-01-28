@@ -1,4 +1,16 @@
-			      CHANGES IN markdown VERSION 0.6.2
+			      CHANGES IN markdown VERSION 0.6.4
+
+NEW FEATURES
+
+  o added 'mathjax_embed' to HTML options for embedding the MathJax
+  JavaScript in the HTML document rather than linking to it online. Note the
+  JavaScript code is read from the http instead of https MathJax URL.
+  Contributed by Henrik Bengtsson.
+
+  o added another vignette to show the HTML output of the original vignette
+  (see browseVignettes('markdown'))
+
+			      CHANGES IN markdown VERSION 0.6.3
 
 NEW FEATURES
 

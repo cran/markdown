@@ -1,7 +1,7 @@
 #
 # renderMarkdown.R
 #
-# Copyright (C) 2009-2013 by RStudio, Inc.
+# Copyright (C) 2009-2014 by RStudio, Inc.
 #
 # This program is licensed to you under the terms of version 2 of the
 # GNU General Public License. This program is distributed WITHOUT ANY
@@ -90,7 +90,7 @@ rendererOutputType <- function(name) {
 #'
 #'   The original Sundown library on github:
 #'
-#'   \url{https://github.com/tanoku/sundown}
+#'   \url{https://github.com/vmg/sundown}
 #'
 #'   C stubs for writing new renders are in inst/include/markdown_rstubs.[ch].
 #' @export renderMarkdown
@@ -178,6 +178,35 @@ renderMarkdown <- function(
   html
 }
 
+
+# From http://www.mathjax.org/community/mathjax-badge/
+#  Regular: http://cdn.mathjax.org/mathjax/...
+#  Secure: https://c328740.ssl.cf1.rackcdn.com/mathjax/...
+.mathJax <- local({
+  js <- NULL
+
+  function(embed=FALSE, force=FALSE) {
+    if (!embed)
+      return(paste(readLines(system.file(
+        'resources', 'mathjax.html', package = 'markdown'
+      )), collapse = '\n'))
+
+    url <- 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+
+    # Insert or link to MathJax script?
+    html <- c('<!-- MathJax scripts -->', if (embed) {
+      # Already in cache?
+      if (force || is.null(js)) {
+        js <<- readLines(url, warn=FALSE)
+      }
+      c('<script type="text/javascript">', js)
+    } else {
+      sprintf('<script type="text/javascript" src="%s">', url)
+    }, '</script>')
+
+    paste(html, collapse="\n")
+  }
+})
 
 .requiresMathJax <- function(html) {
   regs <- c('\\\\\\(([\\s\\S]+?)\\\\\\)', '\\\\\\[([\\s\\S]+?)\\\\\\]')
@@ -328,9 +357,7 @@ markdownToHTML <- function(
     html <- sub('#!r_highlight#', highlight, html, fixed = TRUE)
 
     if ('mathjax' %in% options && .requiresMathJax(html)) {
-      mathjax <- paste(readLines(system.file(
-        'resources', 'mathjax.html', package = 'markdown'
-      )), collapse = '\n')
+      mathjax <- .mathJax(embed = 'mathjax_embed' %in% options)
     } else mathjax <- ''
     html <- sub('#!mathjax#', mathjax, html, fixed = TRUE)
 
@@ -374,7 +401,7 @@ option2char <- function(x) {
 #'
 #'   The original Sundown library on github:
 #'
-#'   \url{https://github.com/tanoku/sundown}
+#'   \url{https://github.com/vmg/sundown}
 #'
 #'   C stubs for writing new renders are in inst/include/markdown_rstubs.[ch].
 #' @export smartypants
