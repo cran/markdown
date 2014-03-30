@@ -218,8 +218,7 @@ cat(markdownToHTML(text = &quot;foo_bar_function&quot;, extensions = c()))
 <pre><code>## &lt;p&gt;foo_bar_function&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# tables example (need 4 spaces at beginning of line here)
+<pre><code class="r"># tables example (need 4 spaces at beginning of line here)
 cat(markdownToHTML(text = &quot;
     First Header  | Second Header
     ------------- | -------------
@@ -235,8 +234,7 @@ cat(markdownToHTML(text = &quot;
 ## &lt;/code&gt;&lt;/pre&gt;
 </code></pre>
 
-<pre><code class="r">
-# but not here
+<pre><code class="r"># but not here
 cat(markdownToHTML(text = &quot;
 First Header  | Second Header
 ------------- | -------------
@@ -262,8 +260,7 @@ Content Cell  | Content Cell
 ## &lt;/tbody&gt;&lt;/table&gt;
 </code></pre>
 
-<pre><code class="r">
-# fenced_code example (need at least three leading ~ or `)
+<pre><code class="r"># fenced_code example (need at least three leading ~ or `)
 fenced_block &lt;- function(text, x = &quot;`&quot;, n = 3) {
   fence &lt;- paste(rep(x, n), collapse = &quot;&quot;)
   paste(fence, text, fence, sep = &quot;&quot;)
@@ -280,8 +277,7 @@ first line.
 ## &lt;/code&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-cat(markdownToHTML(text = fenced_block(&quot;
+<pre><code class="r">cat(markdownToHTML(text = fenced_block(&quot;
 preformatted text here without having to indent
 first line.
 &quot;), extensions = c(&quot;fenced_code&quot;)))
@@ -292,8 +288,7 @@ first line.
 ## &lt;/code&gt;&lt;/pre&gt;
 </code></pre>
 
-<pre><code class="r">
-# autolink example
+<pre><code class="r"># autolink example
 cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c()))
 </code></pre>
 
@@ -306,8 +301,7 @@ cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c(
 <pre><code>## &lt;p&gt;&lt;a href=&quot;http://www.r-project.org/&quot;&gt;http://www.r-project.org/&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# strikethrough example
+<pre><code class="r"># strikethrough example
 cat(markdownToHTML(text = &quot;~~awesome~~&quot;, extensions = c()))
 </code></pre>
 
@@ -320,8 +314,7 @@ cat(markdownToHTML(text = &quot;~~awesome~~&quot;, extensions = c()))
 <pre><code>## &lt;p&gt;&lt;del&gt;awesome&lt;/del&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# lax_spacing
+<pre><code class="r"># lax_spacing
 cat(markdownToHTML(text = &quot;
 Embedding html without surrounding with empty newline.
 &lt;div&gt;_markdown_&lt;/div&gt;
@@ -348,8 +341,7 @@ extra text.
 ## &lt;p&gt;extra text.&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# space_headers example
+<pre><code class="r"># space_headers example
 cat(markdownToHTML(text = &quot;#A Header\neven though there is no space between # and A&quot;,
                    extensions = c(&quot;&quot;)))
 </code></pre>
@@ -367,8 +359,7 @@ cat(markdownToHTML(text = &quot;#A Header\neven though there is no space between
 ## because there is no space between # and N&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# superscript example
+<pre><code class="r"># superscript example
 cat(markdownToHTML(text = &quot;2^10&quot;, extensions = c()))
 </code></pre>
 
@@ -402,8 +393,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 <pre><code>## &lt;p&gt;Hello&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# skip_style example
+<pre><code class="r"># skip_style example
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
@@ -416,8 +406,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 <pre><code>## &lt;p&gt;&lt;img src=&quot;&quot;&gt;&lt;a href=&quot;&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# skip_images example
+<pre><code class="r"># skip_images example
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
@@ -430,8 +419,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 <pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;a href=&quot;&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# skip_links example
+<pre><code class="r"># skip_links example
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
@@ -444,8 +432,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 <pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;&quot;&gt;Hello&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# safelink example
+<pre><code class="r"># safelink example
 cat(markdownToHTML(text = &#39;[foo](foo://bar &quot;baz&quot;)&#39;, options = c(tOpt)))
 </code></pre>
 
@@ -458,8 +445,7 @@ cat(markdownToHTML(text = &#39;[foo](foo://bar &quot;baz&quot;)&#39;, options = 
 <pre><code>## &lt;p&gt;[foo](foo://bar &amp;quot;baz&amp;quot;)&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# toc example
+<pre><code class="r"># toc example
 mkd &lt;- paste(c(&quot;# Header 1&quot;, &quot;p1&quot;, &quot;## Header 2&quot;, &quot;p2&quot;), collapse = &quot;\n&quot;)
 
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
@@ -501,8 +487,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 ## &lt;p&gt;p2&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# hard_wrap example
+<pre><code class="r"># hard_wrap example
 cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt)))
 </code></pre>
 
@@ -517,8 +502,7 @@ cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt)))
 ## bar&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# use_xhtml example
+<pre><code class="r"># use_xhtml example
 cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_wrap&quot;)))
 </code></pre>
 
@@ -533,8 +517,7 @@ cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_w
 ## bar&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# escape example
+<pre><code class="r"># escape example
 mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;&quot;&gt;&lt;a href=&quot;&quot;&gt;Hello&lt;/a&gt;&#39;
 cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
 </code></pre>
@@ -549,8 +532,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;, &quot;es
 <pre><code>## &lt;p&gt;&amp;lt;style&amp;gt;&amp;lt;/style&amp;gt;&amp;lt;img src=&amp;quot;&amp;quot;&amp;gt;&amp;lt;a href=&amp;quot;&amp;quot;&amp;gt;Hello&amp;lt;/a&amp;gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-# smartypants example
+<pre><code class="r"># smartypants example
 cat(markdownToHTML(text = &quot;1/2 (c)&quot;, options = c(tOpt)))
 </code></pre>
 
@@ -563,8 +545,7 @@ cat(markdownToHTML(text = &quot;1/2 (c)&quot;, options = c(tOpt)))
 <pre><code>## &lt;p&gt;&amp;frac12; &amp;copy;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">
-cat(smartypants(text = &quot;1/2 (c)\n&quot;))
+<pre><code class="r">cat(smartypants(text = &quot;1/2 (c)\n&quot;))
 </code></pre>
 
 <pre><code>## &amp;frac12; &amp;copy;

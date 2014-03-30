@@ -243,10 +243,11 @@ SEXP rmd_registered_renderers(void)
    SEXP ans;
    SEXP names;
    char *name, *output_type; 
+   int i;
 
    PROTECT(ans = allocVector(STRSXP,NREND));
    PROTECT(names = allocVector(STRSXP,NREND));
-   int i;
+
    for (i=0;i<NREND;i++)
    {
       if (RENDERERS[i].name != NULL)
@@ -338,17 +339,16 @@ Rboolean rmd_buf_to_output(struct buf *ob, SEXP Soutput, SEXP *raw_vec)
    {
       const char *filename = CHAR(STRING_ELT(Soutput,0));
       FILE *out = fopen(filename,"w");
-      size_t ret;
       if (!out)
       {
          warning("Cannot save output to %s!", filename);
          return FALSE;
       }
 
-      ret = fwrite(ob->data, 1, ob->size, out);
+      fwrite(ob->data, 1, ob->size, out);
       fclose(out);
 
-      if (ret < 0)
+      if (ferror (out))
       {
          warning("Error occurred writing to %s!", filename);
          return FALSE;
@@ -404,7 +404,7 @@ void skip_pandoc_title_block(struct buf *ib){
  * We skip everything in between including the ending '---'.
  */
 void skip_jekyll_front_matter(struct buf *ib){
-	int i = 0; int front_matter_found = 0;
+   int front_matter_found = 0;
    size_t pos = 0;
 
    /* Jekyll 0.12.0 expects front matter to start on the first line */

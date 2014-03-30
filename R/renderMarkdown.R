@@ -283,6 +283,7 @@ renderMarkdown <- function(
 #' @param template an HTML file used as template.
 #' @param fragment.only Whether or not to produce an HTML fragment without the
 #'   HTML header and body tags, CSS, and Javascript components.
+#' @param encoding the encoding of the input file; see \code{\link{file}}
 #' @return \code{renderMarkdown} returns NULL invisibly when output is to a
 #'   file, and a \code{character} vector otherwise.
 #' @seealso \code{\link{markdownExtensions}}, \code{\link{markdownHTMLOptions}},
@@ -297,7 +298,8 @@ markdownToHTML <- function(
   stylesheet = getOption('markdown.HTML.stylesheet'),
   header = getOption('markdown.HTML.header'),
   template = getOption('markdown.HTML.template'),
-  fragment.only = FALSE
+  fragment.only = FALSE,
+  encoding = getOption('encoding')
 ) {
   if (fragment.only) options <- c(options, 'fragment_only')
 
@@ -306,6 +308,16 @@ markdownToHTML <- function(
     output <- NULL
   } else outputFile <- NULL
 
+  # If input is file, it needs to be read with the appropriate encoding.
+  # Here, instead of tweaking rmd_render_markdown in Rmarkdown.c,
+  # read a file with the encoding and convert it into native encoding.
+  # So all process will go under native encoding as previous.
+  # Finally, output will be converted into UTF8.
+  if (!missing(file)) {
+    con <- file(file, encoding = encoding)
+    text <- tryCatch(enc2native(readLines(con)), finally = close(con))
+    file <- NULL
+  }
   ret <- renderMarkdown(file, output, text, renderer = 'HTML',
                         renderer.options = options, extensions = extensions)
 
@@ -347,7 +359,7 @@ markdownToHTML <- function(
     }
 
     # Need to scrub title more, e.g. strip html, etc.
-    html <- sub('#!title#', title, html, perl = TRUE)
+    html <- sub('#!title#', title, html, fixed = TRUE)
 
     if ('highlight_code' %in% options && .requiresHighlighting(html)) {
       highlight <- paste(readLines(system.file(
@@ -365,7 +377,12 @@ markdownToHTML <- function(
   }
 
   if (is.character(outputFile)) {
-    writeLines(ret, outputFile)
+    # Here the encoding is hard-coded.
+    # Output should be always UTF8 in accordance with HTML charset
+    # Note that ret is native encoding but `file()` will do the
+    # conversion from native to utf8 here.
+    con <- file(outputFile, "w", encoding = "UTF-8")
+    tryCatch(writeLines(ret, con), finally = close(con))
     ret <- NULL
   }
 
