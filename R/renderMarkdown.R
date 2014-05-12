@@ -97,7 +97,7 @@ rendererOutputType <- function(name) {
 #' @examples
 #' renderMarkdown(text = "Hello World!")
 renderMarkdown <- function(
-  file, output, text, renderer = 'HTML', renderer.options = NULL,
+  file, output = NULL, text = NULL, renderer = 'HTML', renderer.options = NULL,
   extensions = getOption('markdown.extensions')
 ) {
 
@@ -105,17 +105,11 @@ renderMarkdown <- function(
     stop("Renderer '", renderer, "' is not registered!")
 
   # Input from either a file or character vector
-  if (!missing(file) && is.character(file) && file.exists(file)) {
-    text <- NULL
-  } else if (!missing(text) && !is.null(text) && is.character(text)) {
-    file <- NULL
+  if (is.character(text)) {
     if (length(text) > 1) text <- paste(text, collapse = '\n')
-  } else stop('Need input from either a file or a text string!')
-
-  # Output is either returned or written to a file
-  if (missing(output)) output <- NULL else {
-    if (!is.null(output) && !is.character(output))
-      stop('output variable must be a file name!')
+    file <- NULL
+  } else {
+    if (missing(file)) stop('Need input from either a file or a text string!')
   }
 
   # Options
@@ -137,16 +131,6 @@ renderMarkdown <- function(
   invisible(ret)
 }
 
-.mimeType <- function(f) {
-  f <- f[1]
-  fileExt <- function (x) {
-    pos <- regexpr('\\.([[:alnum:]]+)$', x)
-    ifelse(pos > -1L, tolower(substring(x, pos + 1L)), '')
-  }
-  ext <- fileExt(f)
-  ifelse(nchar(ext) > 1L && !is.null(.MIMEMAP[[ext]]), .MIMEMAP[[ext]], '')
-}
-
 .b64EncodeFile <- function(inFile) {
   fileSize <- file.info(inFile)$size
 
@@ -154,7 +138,7 @@ renderMarkdown <- function(
     warning(inFile, 'is empty!')
     return(inFile)
   }
-  paste( 'data:', .mimeType(inFile), ';base64,',
+  paste( 'data:', mime::guess_type(inFile), ';base64,',
          .Call(rmd_b64encode_data, readBin(inFile, 'raw', n = fileSize)),
          sep = '')
 }
@@ -267,8 +251,8 @@ renderMarkdown <- function(
 #'   If it is omitted from the argument list, then it is presumed that the
 #'   \code{text} argument will be used instead.
 #' @param output a character string giving the pathname of the file to write to.
-#'   If it is omitted, then it is presumed that the user expects the results
-#'   returned as a \code{raw} vector.
+#'   If it is omitted (\code{NULL}), then it is presumed that the user expects
+#'   the results returned as a \code{character} vector.
 #' @param text a character vector containing the \emph{markdown} text to
 #'   transform (each element of this vector is treated as a line in a file).
 #' @param options options that are passed to the renderer.  see
@@ -290,9 +274,13 @@ renderMarkdown <- function(
 #'   \code{\link{renderMarkdown}}.
 #' @export markdownToHTML
 #' @examples
-#' print(markdownToHTML(text = "Hello World!"))
+#' (markdownToHTML(text = "Hello World!", fragment.only = TRUE))
+#' (markdownToHTML(file = NULL, text = "_text_ will override _file_",
+#'   fragment.only = TRUE))
+#' # write HTML to an output file
+#' markdownToHTML(text = "_Hello_, **World**!", output = "test.html")
 markdownToHTML <- function(
-  file, output, text, options = getOption('markdown.HTML.options'),
+  file, output = NULL, text = NULL, options = getOption('markdown.HTML.options'),
   extensions = getOption('markdown.extensions'),
   title = '',
   stylesheet = getOption('markdown.HTML.stylesheet'),
@@ -303,22 +291,17 @@ markdownToHTML <- function(
 ) {
   if (fragment.only) options <- c(options, 'fragment_only')
 
-  if (!missing(output)) {
-    outputFile <- output
-    output <- NULL
-  } else outputFile <- NULL
-
   # If input is file, it needs to be read with the appropriate encoding.
   # Here, instead of tweaking rmd_render_markdown in Rmarkdown.c,
   # read a file with the encoding and convert it into native encoding.
   # So all process will go under native encoding as previous.
   # Finally, output will be converted into UTF8.
-  if (!missing(file)) {
-    con <- file(file, encoding = encoding)
+  if (!is.character(text)) {
+    con <- base::file(file, encoding = encoding)
     text <- tryCatch(enc2native(readLines(con)), finally = close(con))
-    file <- NULL
   }
-  ret <- renderMarkdown(file, output, text, renderer = 'HTML',
+
+  ret <- renderMarkdown(file = NULL, output = NULL, text, renderer = 'HTML',
                         renderer.options = options, extensions = extensions)
 
   if ('base64_images' %in% options) {
@@ -376,12 +359,12 @@ markdownToHTML <- function(
     ret <- html
   }
 
-  if (is.character(outputFile)) {
+  if (is.character(output)) {
     # Here the encoding is hard-coded.
     # Output should be always UTF8 in accordance with HTML charset
     # Note that ret is native encoding but `file()` will do the
     # conversion from native to utf8 here.
-    con <- file(outputFile, "w", encoding = "UTF-8")
+    con <- base::file(output, "w", encoding = "UTF-8")
     tryCatch(writeLines(ret, con), finally = close(con))
     ret <- NULL
   }
@@ -581,8 +564,7 @@ markdownExtensions <- function()
 #'
 #' \item{\code{'toc'}}{ assigns an HTML id to each header of the form 'toc_%d'
 #' where '%d' is replaced with the position of the header within the document
-#' (starting at 0). The user must create the top level table of contents by
-#' hand.}
+#' (starting at 0), and creates the table of contents.}
 #'
 #' \item{\code{'hard_wrap'}}{ adds an HTML br tag for every newline (excluding
 #' trailing) found within a paragraph.}

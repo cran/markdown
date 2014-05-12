@@ -21,4 +21,3 @@ library(markdown)
 ## ----include=FALSE-------------------------------------------------------
 options(markdown.HTML.options=markdownHTMLOptions(defaults=TRUE))
 
-
