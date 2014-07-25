@@ -268,11 +268,11 @@ renderMarkdown <- function(
 #' @param fragment.only Whether or not to produce an HTML fragment without the
 #'   HTML header and body tags, CSS, and Javascript components.
 #' @param encoding the encoding of the input file; see \code{\link{file}}
-#' @return \code{renderMarkdown} returns NULL invisibly when output is to a
-#'   file, and a \code{character} vector otherwise.
+#' @return Invisible \code{NULL} when output is to a file, and a character
+#'   vector otherwise.
 #' @seealso \code{\link{markdownExtensions}}, \code{\link{markdownHTMLOptions}},
 #'   \code{\link{renderMarkdown}}.
-#' @export markdownToHTML
+#' @export
 #' @examples
 #' (markdownToHTML(text = "Hello World!", fragment.only = TRUE))
 #' (markdownToHTML(file = NULL, text = "_text_ will override _file_",
@@ -344,6 +344,11 @@ markdownToHTML <- function(
     # Need to scrub title more, e.g. strip html, etc.
     html <- sub('#!title#', title, html, fixed = TRUE)
 
+    if ('mathjax' %in% options && .requiresMathJax(html)) {
+      mathjax <- .mathJax(embed = 'mathjax_embed' %in% options)
+    } else mathjax <- ''
+    html <- sub('#!mathjax#', mathjax, html, fixed = TRUE)
+
     if ('highlight_code' %in% options && .requiresHighlighting(html)) {
       highlight <- paste(readLines(system.file(
         'resources', 'r_highlight.html', package = 'markdown'
@@ -351,21 +356,16 @@ markdownToHTML <- function(
     } else highlight <- ''
     html <- sub('#!r_highlight#', highlight, html, fixed = TRUE)
 
-    if ('mathjax' %in% options && .requiresMathJax(html)) {
-      mathjax <- .mathJax(embed = 'mathjax_embed' %in% options)
-    } else mathjax <- ''
-    html <- sub('#!mathjax#', mathjax, html, fixed = TRUE)
-
     ret <- html
   }
 
   if (is.character(output)) {
-    # Here the encoding is hard-coded.
     # Output should be always UTF8 in accordance with HTML charset
-    # Note that ret is native encoding but `file()` will do the
-    # conversion from native to utf8 here.
-    con <- base::file(output, "w", encoding = "UTF-8")
-    tryCatch(writeLines(ret, con), finally = close(con))
+    ret2 <- iconv(ret, to = 'UTF-8')
+    if (any(is.na(ret2))) {
+      warning('failed to convert output to UTF-8; wrong input encoding or locale?')
+    } else ret <- ret2
+    writeLines(ret, output, useBytes = TRUE)
     ret <- NULL
   }
 
