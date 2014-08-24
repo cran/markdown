@@ -64,7 +64,7 @@ rendererOutputType <- function(name) {
 }
 
 
-#' Render markdown
+#' Render markdown to an HTML fragment
 #'
 #' \code{renderMarkdown} transforms the \emph{markdown} text provided by the
 #' user in either the \code{file} or \code{text} variable. The transformation is
@@ -150,6 +150,8 @@ renderMarkdown <- function(
   if (m[[1]][1] != -1) {
     .b64EncodeImgSrc <- function(imgSrc) {
       src <- sub(reg, '\\1', imgSrc)
+      # already base64 encoded?
+      if (grepl('^data:.+;base64,.+', src)) return(imgSrc)
       inFile <- URLdecode(src)
       if (length(inFile) && file.exists(inFile))
         imgSrc <- sub(src, .b64EncodeFile(inFile), imgSrc, fixed = TRUE)
@@ -163,9 +165,6 @@ renderMarkdown <- function(
 }
 
 
-# From http://www.mathjax.org/community/mathjax-badge/
-#  Regular: http://cdn.mathjax.org/mathjax/...
-#  Secure: https://c328740.ssl.cf1.rackcdn.com/mathjax/...
 .mathJax <- local({
   js <- NULL
 
@@ -175,6 +174,7 @@ renderMarkdown <- function(
         'resources', 'mathjax.html', package = 'markdown'
       )), collapse = '\n'))
 
+    # http://docs.mathjax.org/en/latest/start.html
     url <- 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 
     # Insert or link to MathJax script?
@@ -528,9 +528,9 @@ markdownExtensions <- function()
 #' \code{markdownHTMLOptions} returns a character vector listing all the options
 #' that are available for the HTML renderer in the \pkg{markdown} package. As a
 #' convenience, the package default options were chosen to render well-formed
-#' stand-alone HTML pages. The default options are \code{'use_xhtml'},
-#' \code{'smartypants'}, \code{'base64_images'}, \code{'mathjax'}, and
-#' \code{'highlight_code'}.
+#' stand-alone HTML pages when using \code{\link{markdownToHTML}()}. The default
+#' options are \code{'use_xhtml'}, \code{'smartypants'}, \code{'base64_images'},
+#' \code{'mathjax'}, and \code{'highlight_code'}.
 #'
 #' The HTML renderer provides several options described below. To turn these on
 #' globally in the \pkg{markdown} package, simply place some or all of them in a
