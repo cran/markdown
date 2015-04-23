@@ -79,38 +79,44 @@ rendererOutputType <- function(name) {
 #' @param renderer.options options that are passed to the renderer.  For
 #'   \code{HTML} renderer options see \code{\link{markdownHTMLOptions}}.
 #' @return \code{renderMarkdown} returns NULL invisibly when output is to a
-#'   file, and either \code{character} or \code{raw} vector depending on the
-#'   renderer output type.
+#'   file, and either \code{character} (with the UTF-8 encoding) or \code{raw}
+#'   vector depending on the renderer output type.
 #' @seealso \code{\link{markdownExtensions}}, \code{\link{markdownHTMLOptions}},
 #'   \code{\link{markdownToHTML}}.
 #'
 #'   For a description of the original \emph{markdown} version:
-#'
 #'   \url{http://daringfireball.net/projects/markdown/}
 #'
 #'   The original Sundown library on github:
-#'
 #'   \url{https://github.com/vmg/sundown}
 #'
 #'   C stubs for writing new renders are in inst/include/markdown_rstubs.[ch].
 #' @export renderMarkdown
 #' @examples
-#' renderMarkdown(text = "Hello World!")
+#' (renderMarkdown(text = "Hello World!"))
+#' # a few corner cases
+#' (renderMarkdown(text = character(0)))
+#' (renderMarkdown(text = ''))
 renderMarkdown <- function(
   file, output = NULL, text = NULL, renderer = 'HTML', renderer.options = NULL,
-  extensions = getOption('markdown.extensions')
+  extensions = getOption('markdown.extensions'), encoding = getOption('encoding')
 ) {
 
   if (!rendererExists(renderer))
     stop("Renderer '", renderer, "' is not registered!")
 
   # Input from either a file or character vector
-  if (is.character(text)) {
-    if (length(text) > 1) text <- paste(text, collapse = '\n')
-    file <- NULL
-  } else {
-    if (missing(file)) stop('Need input from either a file or a text string!')
+  if (!is.character(text)) {
+    # If input is file, it needs to be read with the appropriate encoding. Here,
+    # instead of tweaking rmd_render_markdown in Rmarkdown.c, read a file with
+    # the encoding and convert it to UTF-8. Finally, output will be marked as
+    # UTF-8 as well.
+    con <- base::file(file, encoding = encoding)
+    text <- tryCatch(readLines(con), finally = close(con))
   }
+  text <- enc2utf8(text)
+  if (length(text) > 1) text <- paste(text, collapse = '\n')
+  file <- NULL
 
   # Options
   if (is.null(renderer.options))
@@ -122,11 +128,18 @@ renderMarkdown <- function(
       stop('HTML options must be a character vector')
   }
 
+  if (length(text) == 0 || text == '') {
+     if (is.null(output)) return(invisible(character(length(text))))
+     file.create(output)
+     return()
+  }
   ret <- .Call(rmd_render_markdown,
                file, output, text, renderer, renderer.options, extensions)
 
-  if (is.raw(ret) && rendererOutputType(renderer) == 'character')
+  if (is.raw(ret) && rendererOutputType(renderer) == 'character') {
     ret <- rawToChar(ret)
+    Encoding(ret) <- 'UTF-8'
+  }
 
   invisible(ret)
 }
@@ -199,7 +212,6 @@ renderMarkdown <- function(
 }
 
 .requiresHighlighting <- function(html) any(grepl('<pre><code class="r"', html))
-
 
 
 #' Render markdown to HTML
@@ -291,18 +303,11 @@ markdownToHTML <- function(
 ) {
   if (fragment.only) options <- c(options, 'fragment_only')
 
-  # If input is file, it needs to be read with the appropriate encoding.
-  # Here, instead of tweaking rmd_render_markdown in Rmarkdown.c,
-  # read a file with the encoding and convert it into native encoding.
-  # So all process will go under native encoding as previous.
-  # Finally, output will be converted into UTF8.
-  if (!is.character(text)) {
-    con <- base::file(file, encoding = encoding)
-    text <- tryCatch(enc2native(readLines(con)), finally = close(con))
-  }
-
-  ret <- renderMarkdown(file = NULL, output = NULL, text, renderer = 'HTML',
-                        renderer.options = options, extensions = extensions)
+  ret <- renderMarkdown(
+    file, output = NULL, text, renderer = 'HTML',
+    renderer.options = options, extensions = extensions, encoding = encoding
+  )
+  ret <- enc2native(ret)
 
   if ('base64_images' %in% options) {
     filedir <- if (!missing(file) && is.character(file) && file.exists(file)) {
