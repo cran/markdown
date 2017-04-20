@@ -30,7 +30,10 @@ SEXP rmd_b64encode_data( SEXP Sdata)
    Rbyte *data = RAW(Sdata);
    SEXP ans;
    struct buf *databuf;
+   const char* str;
 
+   /* Create a buffer that grows READ_UNIT bytes at
+      the time as a larger buffer is needed */
    databuf = bufnew(READ_UNIT);
    if (!databuf)
    {
@@ -50,14 +53,20 @@ SEXP rmd_b64encode_data( SEXP Sdata)
       }
       if( len ) {
          encodeblock( in, out, len );
-         for( i = 0; i < 4; i++ ) {
-            bufputc(databuf,out[i]);
-         }
+         bufput(databuf,out,4);
       }
    }
 
+   str = bufcstr(databuf);
+   if (!str)
+   {
+      bufrelease(databuf);
+      RMD_WARNING_NOMEM;
+      return R_NilValue;
+   }
+     
    PROTECT(ans = allocVector(STRSXP,1));
-   SET_STRING_ELT(ans,0,mkChar(bufcstr(databuf)));
+   SET_STRING_ELT(ans,0,mkChar(str));
    bufrelease(databuf);
    UNPROTECT(1);
 

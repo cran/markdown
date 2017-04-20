@@ -156,8 +156,9 @@ renderMarkdown <- function(
          sep = '')
 }
 
-
+#' @importFrom utils URLdecode
 .b64EncodeImages <- function(html) {
+  if (length(html) == 0) return(html)
   reg <- "<\\s*[Ii][Mm][Gg]\\s+[Ss][Rr][Cc]\\s*=\\s*[\"']([^\"']+)[\"']"
   m <- gregexpr(reg, html, perl = TRUE)
   if (m[[1]][1] != -1) {
@@ -187,8 +188,7 @@ renderMarkdown <- function(
         'resources', 'mathjax.html', package = 'markdown'
       )), collapse = '\n'))
 
-    # http://docs.mathjax.org/en/latest/start.html
-    url <- 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+    url <- 'https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
 
     # Insert or link to MathJax script?
     html <- c('<!-- MathJax scripts -->', if (embed) {
@@ -324,7 +324,7 @@ markdownToHTML <- function(
     if (is.null(template))
       template <- system.file('resources', 'markdown.html', package = 'markdown')
     html <- paste(readLines(template), collapse = '\n')
-    html <- sub('#!html_output#', ret, html, fixed = TRUE)
+    html <- sub('#!html_output#', if (length(ret)) ret else '', html, fixed = TRUE)
 
     if (is.character(stylesheet)) {
       html <- sub('#!markdown_css#', option2char(stylesheet), html, fixed = TRUE)

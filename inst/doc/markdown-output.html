@@ -295,15 +295,15 @@ first line.
 </code></pre>
 
 <pre><code class="r"># autolink example
-cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c()))
+cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c()))
 </code></pre>
 
-<p>http://www.r-project.org/</p>
+<p>https://www.r-project.org/</p>
 
-<pre><code class="r">cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c(&quot;autolink&quot;)))
+<pre><code class="r">cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c(&quot;autolink&quot;)))
 </code></pre>
 
-<p><a href="http://www.r-project.org/">http://www.r-project.org/</a></p>
+<p><a href="https://www.r-project.org/">https://www.r-project.org/</a></p>
 
 <pre><code class="r"># strikethrough example
 cat(markdownToHTML(text = &quot;~~awesome~~&quot;, extensions = c()))

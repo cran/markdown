@@ -301,16 +301,16 @@ first line.
 </code></pre>
 
 <pre><code class="r"># autolink example
-cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c()))
+cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c()))
 </code></pre>
 
-<pre><code>## &lt;p&gt;http://www.r-project.org/&lt;/p&gt;
+<pre><code>## &lt;p&gt;https://www.r-project.org/&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">cat(markdownToHTML(text = &quot;http://www.r-project.org/&quot;, extensions = c(&quot;autolink&quot;)))
+<pre><code class="r">cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c(&quot;autolink&quot;)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;a href=&quot;http://www.r-project.org/&quot;&gt;http://www.r-project.org/&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;a href=&quot;https://www.r-project.org/&quot;&gt;https://www.r-project.org/&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r"># strikethrough example
