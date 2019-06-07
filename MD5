@@ -1,11 +1,11 @@
-d4cd5415082d00d2e659debad6d7e027 *DESCRIPTION
+55607200ed011d7a789bf1cff6b6af43 *DESCRIPTION
 0138c297e1c17cef31fd4275e5d2058f *NAMESPACE
-3b284d048686a9461c3ec8bddaf189bf *NEWS
+6bb6fa9d727fb2f2e521dd9a9899fcd0 *NEWS
 0a375621b5466aaa55827331b7a54aba *R/markdown-package.R
-4c0c2582a89ace3512ccd0b7d077e6d1 *R/renderMarkdown.R
+96a3f2899b89ded816a2e172866f93d6 *R/renderMarkdown.R
 9c15b355037cc2e11df80d660e0e6e3f *R/rpubsUpload.R
 3099e0177c35e1f1ba36cb1ed7f0b6ce *README.md
-8a112c8a8be4fca7a96f5a926e56bcec *build/vignette.rds
+7fcce7b0bc5aaf704fa1ff4e5baa96b4 *build/vignette.rds
 603dd5a44125bb3c7f2595c87c048d93 *inst/COPYING
 4907458964894cb1dcc67c4f5690a48b *inst/NOTICE
 5f8881b49f2c520da450f8705916e906 *inst/doc/markdown-examples.R
@@ -28,9 +28,9 @@ e25f1ac72fe309c072cd9aa836c631a6 *inst/resources/r_highlight.html
 033c64ff011f088f0bc28d4e250dabaf *man/markdown.Rd
 ab14ba32c922022de7befc1f9f7d4efe *man/markdownExtensions.Rd
 b8bba863334d0c0224fb75813f6ab3c6 *man/markdownHTMLOptions.Rd
-152b64499b20d7429ebd9038c4bcf0ef *man/markdownToHTML.Rd
+ed2e7507d7659139b2dc13c882ccd347 *man/markdownToHTML.Rd
 ce150e104348b5d753fea95d11a1aa04 *man/registeredRenderers.Rd
-349886947c404ea6b5a9c74acac46de5 *man/renderMarkdown.Rd
+26830ff29e3b7878860467931cb8619e *man/renderMarkdown.Rd
 2ffe48c7a8aa9e7cea56c7724711b840 *man/rendererExists.Rd
 ab2f9d2a23a7d8a18310d813c2411657 *man/rendererOutputType.Rd
 ed3baf556e92dd865ac36deb217cebe5 *man/rpubsUpload.Rd

@@ -9,8 +9,8 @@ markdownToHTML(file, output = NULL, text = NULL,
   extensions = getOption("markdown.extensions"), title = "",
   stylesheet = getOption("markdown.HTML.stylesheet"),
   header = getOption("markdown.HTML.header"),
-  template = getOption("markdown.HTML.template"), fragment.only = FALSE,
-  encoding = getOption("encoding"))
+  template = getOption("markdown.HTML.template"),
+  fragment.only = FALSE, encoding = "UTF-8")
 }
 \arguments{
 \item{file}{a character string giving the pathname of the file to read from.
@@ -43,7 +43,7 @@ the header of the output.}
 \item{fragment.only}{Whether or not to produce an HTML fragment without the
 HTML header and body tags, CSS, and Javascript components.}
 
-\item{encoding}{the encoding of the input file; see \code{\link{file}}}
+\item{encoding}{ignored (always assumes the file is encoded in UTF-8).}
 }
 \value{
 Invisible \code{NULL} when output is to a file, and a character
@@ -98,7 +98,7 @@ When \code{fragment.only} is TRUE, nothing extra is added.
 (markdownToHTML(text = "Hello World!", fragment.only = TRUE))
 (markdownToHTML(file = NULL, text = "_text_ will override _file_", fragment.only = TRUE))
 # write HTML to an output file
-markdownToHTML(text = "_Hello_, **World**!", output = "test.html")
+markdownToHTML(text = "_Hello_, **World**!", output = tempfile())
 }
 \seealso{
 \code{\link{markdownExtensions}}, \code{\link{markdownHTMLOptions}},
