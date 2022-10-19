@@ -1,4 +1,4 @@
-## ----read-code, include=FALSE--------------------------------------------
+## ----read-code, include=FALSE-------------------------------------------------
 library(knitr)
 opts_chunk$set(tidy = FALSE)  # otherwise \n will cause problems
 read_chunk(system.file('examples', 'markdownExtensions.R', package = 'markdown'),
@@ -6,10 +6,10 @@ read_chunk(system.file('examples', 'markdownExtensions.R', package = 'markdown')
 read_chunk(system.file('examples', 'HTMLOptions.R', package = 'markdown'),
            labels = 'html-options')
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(markdown)
 
-## ----md-extensions-------------------------------------------------------
+## ----md-extensions------------------------------------------------------------
 # The following examples are short, so we set the HTML option 'fragment_only'
 
 options(markdown.HTML.options = "fragment_only")
@@ -79,14 +79,14 @@ cat(markdownToHTML(text = "#Not A Header\nbecause there is no space between # an
 cat(markdownToHTML(text = "2^10", extensions = c()))
 cat(markdownToHTML(text = "2^10", extensions = c("superscript")))
 
-## ----html-options--------------------------------------------------------
+## ----html-options-------------------------------------------------------------
 # HTML OPTIONS
 
 # The following examples are short, so we allways add the HTML option 'fragment_only'
 tOpt <- "fragment_only"
 
 # skip_html example
-mkd = '<style></style><img src="http://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a>'
+mkd = '<style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a>'
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 cat(markdownToHTML(text = mkd, options = c(tOpt, "skip_html")))
 
@@ -103,8 +103,8 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 cat(markdownToHTML(text = mkd, options = c(tOpt, "skip_links")))
 
 # safelink example
-cat(markdownToHTML(text = '[foo](http://google.com "baz")', options = c(tOpt)))
-cat(markdownToHTML(text = '[foo](http://google.com "baz")', options = c(tOpt, "safelink")))
+cat(markdownToHTML(text = '[foo](https://www.google.com "baz")', options = c(tOpt)))
+cat(markdownToHTML(text = '[foo](https://www.google.com "baz")', options = c(tOpt, "safelink")))
 
 # toc example
 mkd <- paste(c("# Header 1", "p1", "## Header 2", "p2"), collapse = "\n")
@@ -121,7 +121,7 @@ cat(markdownToHTML(text = "foo\nbar\n", options = c(tOpt, "hard_wrap")))
 cat(markdownToHTML(text = "foo\nbar\n", options = c(tOpt, "hard_wrap", "use_xhtml")))
 
 # escape example
-mkd = '<style></style><img src="http://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a>'
+mkd = '<style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a>'
 cat(markdownToHTML(text = mkd, options = c(tOpt, "skip_html")))
 # overrides all 'skip_*' options
 cat(markdownToHTML(text = mkd, options = c(tOpt, "skip_html", "escape")))
@@ -132,10 +132,10 @@ cat(markdownToHTML(text = "1/2 (c)", options = c(tOpt, "smartypants")))
 
 cat(smartypants(text = "1/2 (c)\n"))
 
-## ----include=FALSE-------------------------------------------------------
+## ----include=FALSE------------------------------------------------------------
 options(markdown.HTML.options=markdownHTMLOptions(defaults=TRUE))
 
-## ----read, include=FALSE-------------------------------------------------
+## ----read, include=FALSE------------------------------------------------------
 library(knitr)
 opts_chunk$set(results = 'asis')
 out = knit_child(text = scan('markdown-examples.Rmd', what = 'character', skip = 7, sep = '\n'))

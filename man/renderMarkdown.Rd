@@ -4,9 +4,15 @@
 \alias{renderMarkdown}
 \title{Render markdown to an HTML fragment}
 \usage{
-renderMarkdown(file, output = NULL, text = NULL, renderer = "HTML", 
-    renderer.options = NULL, extensions = getOption("markdown.extensions"), 
-    encoding = "UTF-8")
+renderMarkdown(
+  file,
+  output = NULL,
+  text = NULL,
+  renderer = "HTML",
+  renderer.options = NULL,
+  extensions = getOption("markdown.extensions"),
+  encoding = "UTF-8"
+)
 }
 \arguments{
 \item{file}{a character string giving the pathname of the file to read from.
@@ -57,7 +63,7 @@ GitHub. C stubs are available to implement new renderers.
   \code{\link{markdownToHTML}}.
 
   For a description of the original \emph{markdown} version:
-  \url{http://daringfireball.net/projects/markdown/}
+  \url{https://daringfireball.net/projects/markdown/}
 
   The original Sundown library on github:
   \url{https://github.com/vmg/sundown}

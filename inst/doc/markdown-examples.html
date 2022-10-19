@@ -392,11 +392,11 @@ cat(markdownToHTML(text = &quot;2^10&quot;, extensions = c()))
 tOpt &lt;- &quot;fragment_only&quot;
 
 # skip_html example
-mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
+mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
@@ -409,20 +409,20 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_style&quot;)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r"># skip_images example
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_images&quot;)))
@@ -435,26 +435,26 @@ cat(markdownToHTML(text = mkd, options = c(tOpt)))
 cat(markdownToHTML(text = mkd, options = c(tOpt)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_links&quot;)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;Hello&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;Hello&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r"># safelink example
-cat(markdownToHTML(text = &#39;[foo](http://google.com &quot;baz&quot;)&#39;, options = c(tOpt)))
+cat(markdownToHTML(text = &#39;[foo](https://www.google.com &quot;baz&quot;)&#39;, options = c(tOpt)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;a href=&quot;http://google.com&quot; title=&quot;baz&quot;&gt;foo&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;a href=&quot;https://www.google.com&quot; title=&quot;baz&quot;&gt;foo&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
-<pre><code class="r">cat(markdownToHTML(text = &#39;[foo](http://google.com &quot;baz&quot;)&#39;, options = c(tOpt, &quot;safelink&quot;)))
+<pre><code class="r">cat(markdownToHTML(text = &#39;[foo](https://www.google.com &quot;baz&quot;)&#39;, options = c(tOpt, &quot;safelink&quot;)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&lt;a href=&quot;http://google.com&quot; title=&quot;baz&quot;&gt;foo&lt;/a&gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&lt;a href=&quot;https://www.google.com&quot; title=&quot;baz&quot;&gt;foo&lt;/a&gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r"># toc example
@@ -530,7 +530,7 @@ cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_w
 </code></pre>
 
 <pre><code class="r"># escape example
-mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;http://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
+mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
 cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
 </code></pre>
 
@@ -541,7 +541,7 @@ cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
 cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;, &quot;escape&quot;)))
 </code></pre>
 
-<pre><code>## &lt;p&gt;&amp;lt;style&amp;gt;&amp;lt;/style&amp;gt;&amp;lt;img src=&amp;quot;http://cran.rstudio.com/Rlogo.jpg&amp;quot;&amp;gt;&amp;lt;a href=&amp;quot;#&amp;quot;&amp;gt;Hello&amp;lt;/a&amp;gt;&lt;/p&gt;
+<pre><code>## &lt;p&gt;&amp;lt;style&amp;gt;&amp;lt;/style&amp;gt;&amp;lt;img src=&amp;quot;https://cran.rstudio.com/Rlogo.jpg&amp;quot;&amp;gt;&amp;lt;a href=&amp;quot;#&amp;quot;&amp;gt;Hello&amp;lt;/a&amp;gt;&lt;/p&gt;
 </code></pre>
 
 <pre><code class="r"># smartypants example

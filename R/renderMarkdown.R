@@ -1,13 +1,13 @@
 #
 # renderMarkdown.R
 #
-# Copyright (C) 2009-2014 by RStudio, Inc.
+# Copyright (C) 2009-2020 by RStudio, PBC
 #
 # This program is licensed to you under the terms of version 2 of the
 # GNU General Public License. This program is distributed WITHOUT ANY
 # EXPRESS OR IMPLIED WARRANTY, INCLUDING THOSE OF NON-INFRINGEMENT,
 # MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Please refer to the
-# GPL (http://www.gnu.org/licenses/gpl-2.0.txt) for more details.
+# GPL (https://www.gnu.org/licenses/gpl-2.0.txt) for more details.
 #
 #
 
@@ -85,7 +85,7 @@ rendererOutputType <- function(name) {
 #'   \code{\link{markdownToHTML}}.
 #'
 #'   For a description of the original \emph{markdown} version:
-#'   \url{http://daringfireball.net/projects/markdown/}
+#'   \url{https://daringfireball.net/projects/markdown/}
 #'
 #'   The original Sundown library on github:
 #'   \url{https://github.com/vmg/sundown}
@@ -394,7 +394,7 @@ option2char <- function(x) {
 #'
 #'   For a description of the original \emph{markdown} version:
 #'
-#'   \url{http://daringfireball.net/projects/markdown/}
+#'   \url{https://daringfireball.net/projects/markdown/}
 #'
 #'   The original Sundown library on github:
 #'
