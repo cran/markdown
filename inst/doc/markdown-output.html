@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<title>Markdown Extensions</title>
+<title>Header 1</title>
 
 <script type="text/javascript">
 window.onload = function() {
@@ -205,325 +205,158 @@ hr {
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{HTML Output from Markdown Examples}
 -->
-
 <p>This vignette shows how the output looks like in HTML from the other vignette <code>markdown-examples.Rmd</code>, in which the literal HTML code was shown.</p>
+<pre><code class="language-r">library(markdown)
 
-<pre><code class="r">library(markdown)
+# toc example
+mkd &lt;- c(&quot;# Header 1&quot;, &quot;p1&quot;, &quot;## Header 2&quot;, &quot;p2&quot;)
+
+cat(mark(mkd))
 </code></pre>
-
-<h1>Markdown Extensions</h1>
-
-<pre><code class="r"># The following examples are short, so we set the HTML option &#39;fragment_only&#39;
-
-options(markdown.HTML.options = &quot;fragment_only&quot;)
-
-# no_intra_emphasis example
-cat(markdownToHTML(text = &quot;foo_bar_function&quot;, extensions = c()))
-</code></pre>
-
-<p>foo<em>bar</em>function</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;foo_bar_function&quot;, extensions = c(&quot;no_intra_emphasis&quot;)))
-</code></pre>
-
-<p>foo_bar_function</p>
-
-<pre><code class="r"># tables example (need 4 spaces at beginning of line here)
-cat(markdownToHTML(text = &quot;
-    First Header  | Second Header
-    ------------- | -------------
-    Content Cell  | Content Cell
-    Content Cell  | Content Cell
-&quot;, extensions = c()))
-</code></pre>
-
-<pre><code>First Header  | Second Header
-------------- | -------------
-Content Cell  | Content Cell
-Content Cell  | Content Cell
-</code></pre>
-
-<pre><code class="r"># but not here
-cat(markdownToHTML(text = &quot;
-First Header  | Second Header
-------------- | -------------
-Content Cell  | Content Cell
-Content Cell  | Content Cell
-&quot;, extensions = c(&quot;tables&quot;)))
-</code></pre>
-
-<table><thead>
-<tr>
-<th>First Header</th>
-<th>Second Header</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Content Cell</td>
-<td>Content Cell</td>
-</tr>
-<tr>
-<td>Content Cell</td>
-<td>Content Cell</td>
-</tr>
-</tbody></table>
-
-<pre><code class="r"># fenced_code example (need at least three leading ~ or `)
-fenced_block &lt;- function(text, x = &quot;`&quot;, n = 3) {
-  fence &lt;- paste(rep(x, n), collapse = &quot;&quot;)
-  paste(fence, text, fence, sep = &quot;&quot;)
-}
-cat(markdownToHTML(text = fenced_block(&quot;
-preformatted text here without having to indent
-first line.
-&quot;), extensions = c()))
-</code></pre>
-
-<p><code>
-preformatted text here without having to indent
-first line.
-</code></p>
-
-<pre><code class="r">cat(markdownToHTML(text = fenced_block(&quot;
-preformatted text here without having to indent
-first line.
-&quot;), extensions = c(&quot;fenced_code&quot;)))
-</code></pre>
-
-<pre><code>preformatted text here without having to indent
-first line.
-</code></pre>
-
-<pre><code class="r"># autolink example
-cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c()))
-</code></pre>
-
-<p>https://www.r-project.org/</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;https://www.r-project.org/&quot;, extensions = c(&quot;autolink&quot;)))
-</code></pre>
-
-<p><a href="https://www.r-project.org/">https://www.r-project.org/</a></p>
-
-<pre><code class="r"># strikethrough example
-cat(markdownToHTML(text = &quot;~~awesome~~&quot;, extensions = c()))
-</code></pre>
-
-<p>~~awesome~~</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;~~awesome~~&quot;, extensions = c(&quot;strikethrough&quot;)))
-</code></pre>
-
-<p><del>awesome</del></p>
-
-<pre><code class="r"># lax_spacing
-cat(markdownToHTML(text = &quot;
-Embedding html without surrounding with empty newline.
-&lt;div&gt;_markdown_&lt;/div&gt;
-extra text.
-&quot;, extensions = c(&quot;&quot;)))
-</code></pre>
-
-<p>Embedding html without surrounding with empty newline.
-<div><em>markdown</em></div>
-extra text.</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;
-Embedding html without surrounding with empty newline.
-&lt;div&gt;_markdown_&lt;/div&gt;
-extra text.
-&quot;, extensions = c(&quot;lax_spacing&quot;)))
-</code></pre>
-
-<p>Embedding html without surrounding with empty newline.</p>
-
-<div>_markdown_</div>
-
-<p>extra text.</p>
-
-<pre><code class="r"># space_headers example
-cat(markdownToHTML(text = &quot;#A Header\neven though there is no space between # and A&quot;,
-                   extensions = c(&quot;&quot;)))
-</code></pre>
-
-<h1>A Header</h1>
-
-<p>even though there is no space between # and A</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;#Not A Header\nbecause there is no space between # and N&quot;,
-                   extensions = c(&quot;space_headers&quot;)))
-</code></pre>
-
-<p>#Not A Header
-because there is no space between # and N</p>
-
-<pre><code class="r"># superscript example
-cat(markdownToHTML(text = &quot;2^10&quot;, extensions = c()))
-</code></pre>
-
-<p>2^10</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;2^10&quot;, extensions = c(&quot;superscript&quot;)))
-</code></pre>
-
-<p>2<sup>10</sup></p>
-
-<h1>HTML Options</h1>
-
-<pre><code class="r"># HTML OPTIONS
-
-# The following examples are short, so we allways add the HTML option &#39;fragment_only&#39;
-tOpt &lt;- &quot;fragment_only&quot;
-
-# skip_html example
-mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
-cat(markdownToHTML(text = mkd, options = c(tOpt)))
-</code></pre>
-
-<p><style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a></p>
-
-<pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
-</code></pre>
-
-<p>Hello</p>
-
-<pre><code class="r"># skip_style example
-cat(markdownToHTML(text = mkd, options = c(tOpt)))
-</code></pre>
-
-<p><style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a></p>
-
-<pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_style&quot;)))
-</code></pre>
-
-<p><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a></p>
-
-<pre><code class="r"># skip_images example
-cat(markdownToHTML(text = mkd, options = c(tOpt)))
-</code></pre>
-
-<p><style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a></p>
-
-<pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_images&quot;)))
-</code></pre>
-
-<p><style></style><a href="#">Hello</a></p>
-
-<pre><code class="r"># skip_links example
-cat(markdownToHTML(text = mkd, options = c(tOpt)))
-</code></pre>
-
-<p><style></style><img src="https://cran.rstudio.com/Rlogo.jpg"><a href="#">Hello</a></p>
-
-<pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_links&quot;)))
-</code></pre>
-
-<p><style></style><img src="https://cran.rstudio.com/Rlogo.jpg">Hello</p>
-
-<pre><code class="r"># safelink example
-cat(markdownToHTML(text = &#39;[foo](https://www.google.com &quot;baz&quot;)&#39;, options = c(tOpt)))
-</code></pre>
-
-<p><a href="https://www.google.com" title="baz">foo</a></p>
-
-<pre><code class="r">cat(markdownToHTML(text = &#39;[foo](https://www.google.com &quot;baz&quot;)&#39;, options = c(tOpt, &quot;safelink&quot;)))
-</code></pre>
-
-<p><a href="https://www.google.com" title="baz">foo</a></p>
-
-<pre><code class="r"># toc example
-mkd &lt;- paste(c(&quot;# Header 1&quot;, &quot;p1&quot;, &quot;## Header 2&quot;, &quot;p2&quot;), collapse = &quot;\n&quot;)
-
-cat(markdownToHTML(text = mkd, options = c(tOpt)))
-</code></pre>
-
 <h1>Header 1</h1>
-
 <p>p1</p>
-
 <h2>Header 2</h2>
-
 <p>p2</p>
-
-<pre><code class="r">cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;toc&quot;)))
+<pre><code class="language-r">cat(mark(mkd, options = &quot;toc&quot;))
 </code></pre>
-
-<div id="toc">
-<div id="toc_header">Table of Contents</div>
+<div id="TOC">
 <ul>
-<li>
-<a href="#toc_0">Header 1</a>
+<li>Header 1
 <ul>
-<li>
-<a href="#toc_1">Header 2</a>
-</li>
+<li>Header 2</li>
 </ul>
 </li>
 </ul>
 </div>
-
-<h1 id="toc_0">Header 1</h1>
-
+<h1>Header 1</h1>
 <p>p1</p>
-
-<h2 id="toc_1">Header 2</h2>
-
+<h2>Header 2</h2>
 <p>p2</p>
-
-<pre><code class="r"># hard_wrap example
-cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt)))
+<pre><code class="language-r"># hard_wrap example
+cat(mark(&quot;foo\nbar\n&quot;))
 </code></pre>
-
 <p>foo
 bar</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_wrap&quot;)))
+<pre><code class="language-r">cat(mark(&quot;foo\nbar\n&quot;, options = &quot;hard_wrap&quot;))
 </code></pre>
-
-<p>foo<br>
+<p>foo<br />
 bar</p>
+<pre><code class="language-r"># latex math example
+mkd &lt;- c(
+  &quot;`$x$` is inline math $x$!&quot;, &quot;&quot;, &quot;Display style:&quot;, &quot;&quot;, &quot;$$x + y$$&quot;, &quot;&quot;,
+  &quot;\\begin{eqnarray}
+a^{2}+b^{2} &amp; = &amp; c^{2}\\\\
+\\sin^{2}(x)+\\cos^{2}(x) &amp; = &amp; 1
+\\end{eqnarray}&quot;
+)
 
-<pre><code class="r"># use_xhtml example
-cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_wrap&quot;)))
+cat(mark(mkd))
 </code></pre>
-
-<p>foo<br>
-bar</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;foo\nbar\n&quot;, options = c(tOpt, &quot;hard_wrap&quot;, &quot;use_xhtml&quot;)))
+<p><code>$x$</code> is inline math \(x\)!</p>
+<p>Display style:</p>
+<p>$$x + y$$</p>
+<p>\begin{eqnarray} a^{2}+b^{2} &amp; = &amp; c^{2}\\ \sin^{2}(x)+\cos^{2}(x) &amp; = &amp; 1 \end{eqnarray}</p>
+<pre><code class="language-r">cat(mark(mkd, options = &quot;-latex_math&quot;))
 </code></pre>
-
-<p>foo<br/>
-bar</p>
-
-<pre><code class="r"># escape example
-mkd = &#39;&lt;style&gt;&lt;/style&gt;&lt;img src=&quot;https://cran.rstudio.com/Rlogo.jpg&quot;&gt;&lt;a href=&quot;#&quot;&gt;Hello&lt;/a&gt;&#39;
-cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;)))
+<p><code>$x$</code> is inline math $x$!</p>
+<p>Display style:</p>
+<p>$$x + y$$</p>
+<p>\begin{eqnarray}
+a^{2}+b^{2} &amp; = &amp; c^{2}\
+\sin^{2}(x)+\cos^{2}(x) &amp; = &amp; 1
+\end{eqnarray}</p>
+<pre><code class="language-r"># smartypants example
+cat(mark(&quot;1/2 (c)&quot;))
 </code></pre>
-
-<p>Hello</p>
-
-<pre><code class="r"># overrides all &#39;skip_*&#39; options
-cat(markdownToHTML(text = mkd, options = c(tOpt, &quot;skip_html&quot;, &quot;escape&quot;)))
+<p>½ ©</p>
+<pre><code class="language-r">cat(mark(&quot;1/2 (c)&quot;, options = &quot;-smartypants&quot;))
 </code></pre>
-
-<p>&lt;style&gt;&lt;/style&gt;&lt;img src=&ldquo;https://cran.rstudio.com/Rlogo.jpg&rdquo;&gt;&lt;a href=&ldquo;#&rdquo;&gt;Hello&lt;/a&gt;</p>
-
-<pre><code class="r"># smartypants example
-cat(markdownToHTML(text = &quot;1/2 (c)&quot;, options = c(tOpt)))
-</code></pre>
-
 <p>&frac12; &copy;</p>
-
-<pre><code class="r">cat(markdownToHTML(text = &quot;1/2 (c)&quot;, options = c(tOpt, &quot;smartypants&quot;)))
+<pre><code class="language-r">mkd &lt;- names(markdown:::pants)
+mkd &lt;- paste(c(mkd, paste0('`', mkd, '`')), collapse = ' ')
+cat(mark(mkd))
 </code></pre>
-
-<p>&frac12; &copy;</p>
-
-<pre><code class="r">cat(smartypants(text = &quot;1/2 (c)\n&quot;))
+<p>½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅚ ⅛ ⅜ ⅝ ⅞ ⅐ ⅑ ⅒ © ® ™ <code>&frac12;</code> <code>&frac13;</code> <code>&frac23;</code> <code>&frac14;</code> <code>&frac34;</code> <code>&frac15;</code> <code>&frac25;</code> <code>&frac35;</code> <code>&frac45;</code> <code>&frac16;</code> <code>&frac56;</code> <code>&frac18;</code> <code>&frac38;</code> <code>&frac58;</code> <code>&frac78;</code> <code>&#8528;</code> <code>&#8529;</code> <code>&#8530;</code> <code>&copy;</code> <code>&reg;</code> <code>&trade;</code></p>
+<pre><code class="language-r">cat(mark(mkd, options = &quot;-smartypants&quot;))
 </code></pre>
-
-<p>&frac12; &copy;</p>
+<p>&frac12; &frac13; &frac23; &frac14; &frac34; &frac15; &frac25; &frac35; &frac45; &frac16; &frac56; &frac18; &frac38; &frac58; &frac78; &#8528; &#8529; &#8530; &copy; &reg; &trade; <code>&frac12;</code> <code>&frac13;</code> <code>&frac23;</code> <code>&frac14;</code> <code>&frac34;</code> <code>&frac15;</code> <code>&frac25;</code> <code>&frac35;</code> <code>&frac45;</code> <code>&frac16;</code> <code>&frac56;</code> <code>&frac18;</code> <code>&frac38;</code> <code>&frac58;</code> <code>&frac78;</code> <code>&#8528;</code> <code>&#8529;</code> <code>&#8530;</code> <code>&copy;</code> <code>&reg;</code> <code>&trade;</code></p>
+<pre><code class="language-r">cat(smartypants(&quot;1/2 (c)\n&quot;))
+</code></pre>
+<p>½ ©</p>
+<pre><code class="language-r"># tables example (need 4 spaces at beginning of line here)
+cat(mark(&quot;
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+&quot;))
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>First Header</th>
+<th>Second Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content Cell</td>
+<td>Content Cell</td>
+</tr>
+<tr>
+<td>Content Cell</td>
+<td>Content Cell</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r"># but not here
+cat(mark(&quot;
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+&quot;, options = '-table'))
+</code></pre>
+<p>First Header  | Second Header
+———–– | ———––
+Content Cell  | Content Cell
+Content Cell  | Content Cell</p>
+<pre><code class="language-r"># autolink example
+cat(mark(&quot;https://www.r-project.org/&quot;))
+</code></pre>
+<p><a href="https://www.r-project.org/">https://www.r-project.org/</a></p>
+<pre><code class="language-r">cat(mark(&quot;https://www.r-project.org/&quot;, options = &quot;-autolink&quot;))
+</code></pre>
+<p>https://www.r-project.org/</p>
+<pre><code class="language-r"># strikethrough example
+cat(mark(&quot;~~awesome~~&quot;))
+</code></pre>
+<p><del>awesome</del></p>
+<pre><code class="language-r">cat(mark(&quot;~~awesome~~&quot;, options = &quot;-strikethrough&quot;))
+</code></pre>
+<p>~~awesome~~</p>
+<pre><code class="language-r"># superscript and subscript examples
+cat(mark(&quot;2^10^&quot;))
+</code></pre>
+<p>2<sup>10</sup></p>
+<pre><code class="language-r">cat(mark(&quot;2^10^&quot;, options = &quot;-superscript&quot;))
+</code></pre>
+<p>2<sup>10</sup></p>
+<pre><code class="language-r">cat(mark(&quot;H~2~O&quot;))
+</code></pre>
+<p>H<sub>2</sub>O</p>
+<pre><code class="language-r">cat(mark(&quot;H~2~O&quot;, options = &quot;-subscript&quot;))
+</code></pre>
+<p>H<sub>2</sub>O</p>
+<pre><code class="language-r"># skip_html tags
+mkd = '&lt;style&gt;a {}&lt;/style&gt;&lt;script type=&quot;text/javascript&quot;&gt;console.log(&quot;No!&quot;);&lt;/script&gt;\n[Hello](#)'
+cat(mark(mkd))
+</code></pre>
+<style>a {}</style><script type="text/javascript">console.log("No!");</script>
+<p><a href="#">Hello</a></p>
+<pre><code class="language-r"># TODO: wait for https://github.com/r-lib/commonmark/issues/15 to be fixed
+# cat(mark(mkd, options = &quot;tagfilter&quot;))
+</code></pre>
 
 </body>
 

@@ -1,3 +1,19 @@
+# CHANGES IN markdown VERSION 1.3
+
+- Switched the underlying Markdown rendering engine from the C library **sundown** (which has been deprecated for a decade) to the R package **commonmark** (thanks, @jeroen, yihui/knitr#1329).
+
+- The functions `renderMarkdown()` and `markdownToHTML()` have been renamed to `mark()` and `mark_html()`, respectively. The old names are still kept in this package for backward-compatibility.
+
+- Removed the arguments `stylesheet` and `fragment.only` in `mark_html()`. For `stylesheet`, please use the argument `meta = list(css = ...)` to provide the CSS stylesheet. For `fragment.only`, please use `mark_html(options = '-standalone')` instead of `fragment.only = TRUE`. Currently these old arguments are still accepted internally, but may be deprecated and dropped in the long run.
+
+- The `file` argument of `mark()` and `mark_html()` can also take a character vector of Markdown text now.
+
+- Removed functions `rendererExists()`, `rendererOutputType()`, and `registeredRenderer()`. They were primarily for internal use.
+
+- Deprecated the function `markdownExtensions()`. All extensions should be specified via the `options` argument of functions like `mark()`, e.g., `mark(options = '+table+tasklist')`. See all options on the help page `?markdown::markdown_options`.
+
+- Renamed `markdownHTMLOptions()` to `markdown_options()`.
+
 # CHANGES IN markdown VERSION 1.2
 
 - Fixed the warnings "a function declaration without a prototype is deprecated in all versions of C" (#94).

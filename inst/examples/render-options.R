@@ -1,4 +1,3 @@
-## ----render-options, tidy=FALSE, file=markdown:::pkg_file('examples', 'render-options.R'), comment=''----
 library(markdown)
 
 # toc example
@@ -69,4 +68,3 @@ mkd = '<style>a {}</style><script type="text/javascript">console.log("No!");</sc
 cat(mark(mkd))
 # TODO: wait for https://github.com/r-lib/commonmark/issues/15 to be fixed
 # cat(mark(mkd, options = "tagfilter"))
-

@@ -1,7 +1,5 @@
-library(markdown)
-
-source(system.file('examples', 'markdownExtensions.R', package = 'markdown'), echo = TRUE)
-source(system.file('examples', 'HTMLOptions.R', package = 'markdown'), echo = TRUE)
-
-rm(mkd)
-rm(tOpt)
+local({
+  if (!file.exists(f <- '../inst/examples/render-options.R'))
+    f = markdown:::pkg_file('examples', 'render-options.R')
+  source(f, local = TRUE, echo = TRUE)
+})
