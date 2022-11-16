@@ -107,8 +107,9 @@
 #' mark(text = 'This is *not* a file.md')
 mark = function(
   file = NULL, output = NULL, text = NULL, format = c('html', 'latex'),
-  options = NULL, template = FALSE, meta = list()
+  options = NULL, template = FALSE, meta = list(), ...
 ) {
+  # TODO: remove the ... argument
   if (is.null(text)) {
     if (!is.character(file)) stop("Either 'file' or 'text' must be provided.")
     text = if (is_file(file)) xfun::read_utf8(file) else file
@@ -239,7 +240,6 @@ mark = function(
       ret = gsub(sprintf('!%s(.+?)%s!', id2, id2), '\\\\textsuperscript{\\1}', ret)
     if (has_sub)
       ret = gsub(sprintf('!%s(.+?)%s!', id3, id3), '\\\\textsubscript{\\1}', ret)
-    # TODO: if \title{} is empty, remove \maketitle
     # fix horizontal rules from --- (\linethickness doesn't work)
     ret = gsub('{\\linethickness}', '{1pt}', ret, fixed = TRUE)
     ret = redefine_level(ret, options[['top_level']])
@@ -248,28 +248,27 @@ mark = function(
   meta$body = ret
   # use the template (if provided) to create a standalone document
   ret = build_output(format, options, template, meta)
+  # remove \title and \maketitle if title is empty
+  if (format == 'latex' && grepl('\n\\title{}\n', ret, fixed = TRUE))
+    ret = gsub('\n(\\\\title\\{}|\\\\maketitle)\n', '\n', ret)
 
   if (is.character(output)) xfun::write_utf8(ret, output) else ret
 }
 
 #' @rdname mark
-#' @param ... For \code{mark_latex()}, arguments to be passed to
-#'   \code{mark()}. For \code{mark_html()}, additional arguments
-#'   for backward-compatibility with previous versions of \pkg{markdown}. These
-#'   are no longer recommended. For example, the \code{stylesheet} argument
-#'   should be replaced by the \code{css} variable in \code{meta}, and the
-#'   \code{fragment.only = TRUE} argument should be specified via \code{options
-#'   = '-standalone'} instead.
+#' @param ... Arguments to be passed to \code{mark()}. For \code{mark_html()},
+#'   also additional arguments for backward-compatibility with previous versions
+#'   of \pkg{markdown}. These are no longer recommended. For example, the
+#'   \code{stylesheet} argument should be replaced by the \code{css} variable in
+#'   \code{meta}, and the \code{fragment.only = TRUE} argument should be
+#'   specified via \code{options = '-standalone'} instead.
 #' @export
 #' @examples
 #'
 #' mark_html('Hello _World_!', options = '-standalone')
 #' # write HTML to an output file
 #' mark_html('_Hello_, **World**!', output = tempfile())
-mark_html = function(
-  file = NULL, output = NULL, text = NULL, options = NULL,
-  template = NULL, meta = list(), ...
-) {
+mark_html = function(..., options = NULL, template = TRUE, meta = list()) {
   # for backward-compatibility of arguments `stylesheet`, `title`, `header`, etc.
   extra = list(...)
   # fragment_only -> !standalone (TODO: may drop fragment_only in future)
@@ -285,23 +284,26 @@ mark_html = function(
     get_option('markdown.html.header')
 
   mark(
-    file, output, text, 'html', options, template, merge_list(meta, list(
+    ..., format = 'html', options = options, template = template,
+    meta = merge_list(meta, drop_null(list(
       css = css, title = title, `header-includes` = header
-    ))
+    )))
   )
 }
 
 #' @export
 #' @rdname mark
-mark_latex = function(...) {
-  mark(..., format = 'latex')
+#' @examples
+#'
+#' mark_latex('Hello _World_!', template = FALSE)
+mark_latex = function(..., template = TRUE) {
+  mark(..., format = 'latex', template = template)
 }
 
 # insert body and meta variables into a template
 build_output = function(format, options, template, meta) {
   if (!isTRUE(options[['standalone']]) || !format %in% c('html', 'latex') ||
       xfun::isFALSE(template)) return(meta$body)
-  # TODO: clean up the default HTML template (e.g., use highlight.js from CDN)
   if (is.null(template) || isTRUE(template)) template = get_option(
     sprintf('markdown.%s.template', format),
     pkg_file('resources', sprintf('markdown.%s', format))
@@ -311,14 +313,12 @@ build_output = function(format, options, template, meta) {
   if (format == 'html') {
     b = meta$body
     if (is.null(meta[['title']])) meta$title = first_header(b)
-    if (is.null(length(meta[['math']])))
+    if (is.null(meta[['math']]))
       meta$math = if (isTRUE(options[['mathjax']]) && .requiresMathJax(b)) {
         .mathJax(embed = isTRUE(options[['mathjax_embed']]))
       }
     if (is.null(meta[['highlight']]))
-      meta$highlight = if (isTRUE(options[['highlight_code']]) && .requiresHighlight(b)) {
-        pkg_file('resources', 'r_highlight.html')
-      }
+      meta$highlight = highlight_js(options[['highlight_code']], b)
     tpl = tpl_html(tpl)
   }
   # find all variables in the template
@@ -416,10 +416,5 @@ markdown_options = function() {
   )
   # options disabled by default
   x2 = c('toc', 'hardbreaks', 'tagfilter', 'mathjax_embed')
-  # TODO: remove this hack after https://github.com/kiernann/gluedown/pull/29
-  if (xfun::check_old_package('gluedown', '1.0.4')) {
-    x1 = setdiff(x1, c('tasklist', 'smart'))
-    x2 = c(x2, c('tasklist', 'smart'))
-  }
   sort(c(paste0('+', x1), paste0('-', x2)))
 }

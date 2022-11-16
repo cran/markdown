@@ -1,4 +1,4 @@
-## ----render-options, tidy=FALSE, file=markdown:::pkg_file('examples', 'render-options.R'), comment=''----
+## ---- markdown-output, results='asis', tidy=FALSE, file=markdown:::pkg_file('examples', 'render-options.R')----
 library(markdown)
 
 # toc example
@@ -22,17 +22,6 @@ a^{2}+b^{2} & = & c^{2}\\\\
 
 cat(mark(mkd))
 cat(mark(mkd, options = "-latex_math"))
-
-# smartypants example
-cat(mark("1/2 (c)"))
-cat(mark("1/2 (c)", options = "-smartypants"))
-
-mkd <- names(markdown:::pants)
-mkd <- paste(c(mkd, paste0('`', mkd, '`')), collapse = ' ')
-cat(mark(mkd))
-cat(mark(mkd, options = "-smartypants"))
-
-cat(smartypants("1/2 (c)\n"))
 
 # tables example (need 4 spaces at beginning of line here)
 cat(mark("
@@ -70,8 +59,10 @@ cat(mark(mkd))
 # TODO: wait for https://github.com/r-lib/commonmark/issues/15 to be fixed
 # cat(mark(mkd, options = "tagfilter"))
 
-## ----read, include=FALSE------------------------------------------------------
-library(knitr)
-opts_chunk$set(results = 'asis')
-out = knit_child(text = scan('markdown-examples.Rmd', what = 'character', skip = 7, sep = '\n'))
+## ---- smartypants, results='asis', eval=isTRUE(l10n_info()[['UTF-8']])--------
+# smartypants example
+cat(mark("1/2 (c)"))
+
+mkd <- paste(names(markdown:::pants), collapse = ' ')
+cat(mark(mkd))
 

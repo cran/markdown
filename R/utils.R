@@ -13,16 +13,13 @@
 smartypants = function(text) {
   text = xfun::split_lines(text)
   i = xfun::prose_index(text)
-  x = text[i]
   r = '(?<!`)\\((c|r|tm)\\)|(\\d+/\\d+)(?!`)'
-  m = gregexpr(r, x, perl = TRUE)
-  regmatches(x, m) = lapply(regmatches(x, m), function(z) {
+  text[i] = match_replace(text[i], r, perl = TRUE, function(z) {
     y = pants[z]
     i = is.na(y)
     y[i] = z[i]
     y
   })
-  text[i] = x
   text
 }
 
@@ -127,7 +124,25 @@ first_header = function(html) {
   FALSE
 }
 
-.requiresHighlight = function(x) any(grepl('<pre><code class="(language-)?[^"]+"', x))
+highlight_js = function(opts, html) {
+  if (isTRUE(opts)) opts = list()
+  if (!is.list(opts) || !any(grepl('<code class="(language-)?[^"]+"', html)))
+    return()
+  # TODO: we could automatically detect <code> languages in html and load the
+  # necessary highlight.js language component (e.g., languages/latex.min.js)
+  opts = merge_list(
+    list(version = '11.6.0', style = 'github', languages = NULL), opts
+  )
+  tpl = one_string(pkg_file('resources', 'highlight.html'))
+  js = paste0(
+    sprintf('gh/highlightjs/cdn-release@%s/build/', opts$version),
+    c('highlight', sprintf('languages/%s', opts$languages)),
+    '.min.js', collapse = ','
+  )
+  tpl = sub_var(tpl, '$style$', opts$style)
+  tpl = sub_var(tpl, '$js$', js)
+  tpl
+}
 
 # get an option using a case-insensitive name
 get_option = function(name, default = NULL) {
@@ -135,6 +150,11 @@ get_option = function(name, default = NULL) {
   i = match(tolower(name), tolower(names(x)))
   i = i[!is.na(i)]
   if (length(i) == 0) default else x[[i[1]]]
+}
+
+drop_null = function(x) {
+  for (i in names(x)) if (is.null(x[[i]])) x[[i]] = NULL
+  x
 }
 
 # if a string is a file path, read the file; then concatenate elements by \n
@@ -228,7 +248,28 @@ option2list = function(x) {
   c(namedBool(sub('^[-]', '', x[i]), FALSE), namedBool(sub('^[+]', '', x[!i])))
 }
 
-pkg_file = function(...) system.file(..., package = 'markdown', mustWork = TRUE)
+pkg_file = function(...) {
+  res = system.file(..., package = 'markdown', mustWork = TRUE)
+  # TODO: remove this hack after the next release of polmineR
+  if (!xfun::check_old_package('polmineR', '0.8.7')) return(res)
+  x = basename(file.path(...))
+  if (x == 'highlight.html') x = 'r_highlight.html'
+  if (!x %in% c('markdown.css', 'markdown.html', 'r_highlight.html')) return(res)
+  download_old(x)
+}
+
+# cache downloaded file
+download_old = local({
+  db = list()
+  function(file) {
+    if (!is.null(db[[file]])) return(db[[file]])
+    u = sprintf('https://cdn.jsdelivr.net/gh/rstudio/markdown@v1.3/inst/resources/%s', file)
+    f = tempfile()
+    xfun::download_file(u, f, quiet = TRUE)
+    db[[file]] <<- f
+    f
+  }
+})
 
 # partition the YAML metadata from the document body and parse it
 split_yaml = function(x) {
@@ -280,25 +321,11 @@ yaml_value = function(x) {
     v = suppressWarnings(as.numeric(v))
     if (!is.na(v)) return(v)
   }
-  x
+  gsub('^["\']|["\']$', '', x)  # remove optional quotes for strings
 }
 
 # TODO: remove this function when revdeps have been fixed
 .b64EncodeFile = function(...) xfun::base64_uri(...)
-
-#' Deprecated
-#'
-#' Please specify extensions via the \code{options} argument instead.
-#' @export
-#' @keywords internal
-markdownExtensions = function(...) {
-  # TODO: remove this function in future
-  warn2(
-    "The function 'markdownExtensions()' has been deprecated in the markdown package. ",
-    "Please specify extensions via the `options` argument instead."
-  )
-  NULL
-}
 
 # TODO: remove this after https://github.com/PolMine/polmineR/pull/232 is fixed
 .onLoad = function(lib, pkg) {
@@ -308,15 +335,8 @@ markdownExtensions = function(...) {
 }
 
 # TODO: remove these hacks eventually
-# whether we need to "cheat" in certain cases (to avoid breaking packages on CRAN)
-cruel = function() {
-  xfun::is_CRAN_incoming() || any(tolower(Sys.getenv(c('NOT_CRAN', 'CI'))) == 'true')
-}
-warn2 = function(...) if (cruel()) warning(...)
 tweak_html = function(x, text) {
   if (xfun::check_old_package('plumbertableau', '0.1.0') ||
-      xfun::check_old_package('tutorial', '0.4.3') ||
-      xfun::check_old_package('gluedown', '1.0.4') ||
       xfun::check_old_package('polmineR', '0.8.7')) {
     # remove extra blockquote
     x = gsub('</blockquote>\n<blockquote>', '', x)
