@@ -152,11 +152,6 @@ get_option = function(name, default = NULL) {
   if (length(i) == 0) default else x[[i[1]]]
 }
 
-drop_null = function(x) {
-  for (i in names(x)) if (is.null(x[[i]])) x[[i]] = NULL
-  x
-}
-
 # if a string is a file path, read the file; then concatenate elements by \n
 one_string = function(x) {
   if (!is.character(x)) return('')
@@ -173,7 +168,7 @@ build_toc = function(html, n = 3) {
   if (length(items) == 0) return()
   x = gsub(r, '<toc>\\2</toc>', items)  # use a tag <toc> to protect header text
   h = as.integer(gsub('^h', '', gsub(r, '\\1', items)))  # header level
-  s = sapply(seq_len(n), function(i) paste(rep('  ', i), collapse = ''))  # indent
+  s = strrep('  ', seq_len(n) - 1)  # indent
   x = paste0(s[h], '- ', x)  # create an unordered list
   x = commonmark::markdown_html(x)
   x = gsub('</?toc>', '', x)
@@ -200,9 +195,8 @@ redefine_level = function(x, top) {
     src = sub(reg, '\\1', z)
     # skip images already base64 encoded
     for (i in grep('^data:.+;base64,.+', src, invert = TRUE)) {
-      # TODO: perhaps can remove the hard dependency on mime
       if (file.exists(f <- URLdecode(src[i]))) z[i] = sub(
-        src[i], xfun::base64_uri(f, mime::guess_type(f)), z[i], fixed = TRUE
+        src[i], xfun::base64_uri(f), z[i], fixed = TRUE
       )
     }
     z
@@ -254,6 +248,7 @@ pkg_file = function(...) {
   if (!xfun::check_old_package('polmineR', '0.8.7')) return(res)
   x = basename(file.path(...))
   if (x == 'highlight.html') x = 'r_highlight.html'
+  if (x == 'default.css') x = 'markdown.css'
   if (!x %in% c('markdown.css', 'markdown.html', 'r_highlight.html')) return(res)
   download_old(x)
 }
@@ -270,6 +265,20 @@ download_old = local({
     f
   }
 })
+
+# resolve CSS/JS shorthand filenames to actual paths (e.g., 'default' to 'default.css')
+resolve_files = function(x, ext = 'css') {
+  if (length(x) == 0) return(x)
+  i = dirname(x) == '.' & xfun::file_ext(x) == '' & !xfun::file_exists(x)
+  files = list.files(pkg_file('resources'), sprintf('[.]%s$', ext), full.names = TRUE)
+  b = xfun::sans_ext(basename(files))
+  if (any(!x[i] %in% b)) stop(
+    "Invalid '", ext, "' option: ", paste0("'", setdiff(x[i], b), "'", collapse = ', '),
+    " (possible values are: ", paste0("'", b, "'", collapse = ','), ")"
+  )
+  x[i] = files[match(x[i], b)]
+  xfun::read_all(x)
+}
 
 # partition the YAML metadata from the document body and parse it
 split_yaml = function(x) {
@@ -327,10 +336,14 @@ yaml_value = function(x) {
 # TODO: remove this function when revdeps have been fixed
 .b64EncodeFile = function(...) xfun::base64_uri(...)
 
-# TODO: remove this after https://github.com/PolMine/polmineR/pull/232 is fixed
+# TODO: remove this after https://github.com/PolMine/polmineR/issues/235 is fixed
 .onLoad = function(lib, pkg) {
   if (is.null(getOption('markdown.HTML.stylesheet')) && 'polmineR' %in% loadedNamespaces()) {
-    options(markdown.HTML.stylesheet = pkg_file('resources', 'markdown.css'))
+    if (xfun::check_old_package('polmineR', '0.8.7')) {
+      options(markdown.HTML.stylesheet = pkg_file('resources', 'default.css'))
+    } else if (packageVersion('polmineR') == '0.8.7') {
+      warning("Sorry, but the 'markdown' does not work with 'polmineR' 0.8.7: https://github.com/PolMine/polmineR/issues/235")
+    }
   }
 }
 
@@ -347,39 +360,6 @@ tweak_html = function(x, text) {
     # preserve trailing spaces
     if (length(sp <- xfun::grep_sub('.*?( +)\n*?$', '\\1', tail(paste(text, collapse = '\n'), 1))))
       x = gsub('></p>(\n+)?$', paste0('>', sp, '</p>\\1'), x)
-  }
-  x
-}
-
-# TODO: remove these functions when xfun 0.35 is released to CRAN
-protect_math = function(x, token = '') {
-  i = xfun::prose_index(x)
-  if (length(i)) x[i] = escape_math(x[i], token)
-  x
-}
-escape_math = function(x, token = '') {
-  m = gregexpr('(?<=^|[\\s])[$](?! )[^$]+?(?<! )[$](?![$0123456789])', x, perl = TRUE)
-  regmatches(x, m) = lapply(regmatches(x, m), function(z) {
-    if (length(z) == 0) return(z)
-    z = sub('^[$]', paste0('`', token, '\\\\('), z)
-    z = sub('[$]$', paste0('\\\\)', token, '`'), z)
-    z
-  })
-  m = gregexpr('(?<=^|[\\s])[$][$](?! )[^$]+?(?<! )[$][$]', x, perl = TRUE)
-  regmatches(x, m) = lapply(regmatches(x, m), function(z) {
-    if (length(z) == 0) return(z)
-    paste0('`', token, z, token, '`')
-  })
-  i = vapply(gregexpr('[$]', x), length, integer(1)) == 2
-  if (any(i)) {
-    x[i] = gsub('^([$][$])([^ ]+)', paste0('`', token, '\\1\\2'), x[i], perl = TRUE)
-    x[i] = gsub('([^ ])([$][$])$', paste0('\\1\\2', token, '`'), x[i], perl = TRUE)
-  }
-  i1 = grep('^\\\\begin\\{[^}]+\\}$', x)
-  i2 = grep('^\\\\end\\{[^}]+\\}$', x)
-  if (length(i1) == length(i2)) {
-    x[i1] = paste0('`', token, x[i1])
-    x[i2] = paste0(x[i2], token, '`')
   }
   x
 }

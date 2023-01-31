@@ -1,3 +1,23 @@
+# CHANGES IN markdown VERSION 1.5
+
+- Values of meta variables `title`, `author`, and `date` (if provided) will be transformed to the target output format before they are passed into templates.
+
+- Fixed the bug that the default CSS was not added to HTML output.
+
+- Removed dependency on the **mime** package.
+
+- Added experimental support for HTML slides: `markdown::mark_html(..., meta = list(css = c('default', 'slides'), js = 'slides'))`. If you prefer knitting `Rmd` documents in RStudio, you may use the output format:
+
+  ```yaml
+  output:
+    markdown::html_format:
+      meta:
+        css: [default, slides]
+        js: [slides]
+  ```
+
+  See https://yihui.org/en/2023/01/minimal-r-markdown/ for a demo.
+
 # CHANGES IN markdown VERSION 1.4
 
 - Empty `\title{}` in LaTeX output will be removed (along with `\maketitle`).
@@ -14,7 +34,7 @@
 
 - The functions `renderMarkdown()` and `markdownToHTML()` have been renamed to `mark()` and `mark_html()`, respectively. The old names are still kept in this package for backward-compatibility.
 
-- Removed the arguments `stylesheet` and `fragment.only` in `mark_html()`. For `stylesheet`, please use the argument `meta = list(css = ...)` to provide the CSS stylesheet. For `fragment.only`, please use `mark_html(options = '-standalone')` instead of `fragment.only = TRUE`. Currently these old arguments are still accepted internally, but may be deprecated and dropped in the long run.
+- Removed the arguments `stylesheet` and `fragment.only` in `mark_html()`. For `stylesheet`, please use the argument `meta = list(css = ...)` to provide the CSS stylesheet. For `fragment.only`, please use `mark_html(template = FALSE)` or `mark_html(options = '-standalone')` instead of `fragment.only = TRUE`. Currently these old arguments are still accepted internally, but may be deprecated and dropped in the long run.
 
 - The `file` argument of `mark()` and `mark_html()` can also take a character vector of Markdown text now.
 

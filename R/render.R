@@ -24,14 +24,16 @@
 #'
 #' \describe{
 #'
-#' \item{\code{css}}{Either a vector of CSS code or a file containing CSS to be
-#' included in the output. The default value is
-#' \code{getOption('markdown.html.css', markdown:::pkg_file('resources',
-#' 'markdown.css'))}, i.e., it can be set via the global option
-#' \code{markdown.html.css}.}
+#' \item{\code{css}}{A vector of CSS code or files to be included in the output.
+#' The default value is \code{getOption('markdown.html.css',
+#' markdown:::pkg_file('resources', 'default.css'))}, i.e., it can be set via
+#' the global option \code{markdown.html.css}.}
 #'
 #' \item{\code{highlight}}{JavaScript code for syntax-highlighting code blocks.
 #' By default, the highlight.js library is used.}
+#'
+#' \item{\code{js}}{A vector of JavaScript code or JavaScript files to be
+#' included in the output.}
 #'
 #' \item{\code{math}}{JavaScript code for rendering LaTeX math. By default,
 #' MathJax is used.}
@@ -107,9 +109,8 @@
 #' mark(text = 'This is *not* a file.md')
 mark = function(
   file = NULL, output = NULL, text = NULL, format = c('html', 'latex'),
-  options = NULL, template = FALSE, meta = list(), ...
+  options = NULL, template = FALSE, meta = list()
 ) {
-  # TODO: remove the ... argument
   if (is.null(text)) {
     if (!is.character(file)) stop("Either 'file' or 'text' must be provided.")
     text = if (is_file(file)) xfun::read_utf8(file) else file
@@ -125,7 +126,7 @@ mark = function(
     meta
   )
 
-  render = tryCatch(
+  render_fun = tryCatch(
     getFromNamespace(paste0('markdown_', tolower(format)), 'commonmark'),
     error = function(e) {
       stop("Output format '", format, "' is not supported in commonmark.")
@@ -136,6 +137,14 @@ mark = function(
   options$extensions = intersect(
     names(Filter(isTRUE, options)), commonmark::list_extensions()
   )
+
+  render_args = options[intersect(names(formals(render_fun)), names(options))]
+  render = function(x, clean = FALSE) {
+    if (length(x) == 0) return(x)
+    res = do.call(render_fun, c(list(text = x), render_args))
+    if (clean) res = gsub('^<p>|(</p>)?\n$', '', res)
+    res
+  }
 
   if (isTRUE(options[['smartypants']])) text = smartypants(text)
 
@@ -148,7 +157,7 @@ mark = function(
   # protect $ $ and $$ $$ math expressions for html/latex output
   if (has_math <- test_feature('latex_math', '[$]')) {
     id = id_string(text); maths = NULL
-    text = protect_math(text, id)
+    text = xfun::protect_math(text, id)
     # temporarily replace math expressions with tokens and restore them later;
     # no need to do this for html output because we need special HTML characters
     # like &<> in math expressions to be converted to entities, but shouldn't
@@ -187,19 +196,22 @@ mark = function(
       sprintf('!%s!', x)
     })
   }
-  # disallow single tilde for <del> (I think it is an aweful idea in GFM's
+  # disallow single tilde for <del> (I think it is an awful idea in GFM's
   # strikethrough extension to allow both single and double tilde for <del>)
   if (is.null(p)) p = xfun::prose_index(text)
   text[p] = match_replace(text[p], r3, perl = TRUE, function(x) {
     gsub('^~|~$', '\\\\~', x)
   })
 
-  # TODO: protect ```{=latex} content, and support code highlighting for latex
+  # put info string inside code blocks so the info won't be lost, e.g., ```r -> ```\nr
+  if (format == 'latex') {
+    id4 = id_string(text)
+    text = gsub(
+      '^([> ]*)(```+)([^`].*)$', sprintf('\\1\\2\n\\1%s\\3%s', id4, id4), text
+    )
+  }
 
-  ret = do.call(render, c(
-    list(text = text),
-    options[intersect(names(formals(render)), names(options))]
-  ))
+  ret = render(text)
 
   if (format == 'html') {
     ret = tweak_html(ret, text)
@@ -213,12 +225,17 @@ mark = function(
       ret = gsub(sprintf('!%s(.+?)%s!', id2, id2), '<sup>\\1</sup>', ret)
     if (has_sub)
       ret = gsub(sprintf('!%s(.+?)%s!', id3, id3), '<sub>\\1</sub>', ret)
-    # restore raw html content from ```{=html}
-    r4 = '<pre><code class="language-\\{=html}">((.|\n)+?)</code></pre>'
-    ret = match_replace(ret, r4, perl = TRUE, function(x) {
-      x = gsub(r4, '\\1', x, perl = TRUE)
-      restore_html(x)
+    r4 = '<pre><code class="language-\\{=([^}]+)}">(.+?)</code></pre>\n'
+    ret = match_replace(ret, r4, function(x) {
+      # restore raw html content from ```{=html}
+      i = gsub(r4, '\\1', x) == 'html'
+      x[i] = restore_html(gsub(r4, '\\2', x[i]))
+      # discard other types of raw content blocks
+      x[!i] = ''
+      x
     })
+    # commonmark doesn't support ```{.class}, which should be treated as ```class
+    ret = gsub('(<pre><code class="language-)\\{[.]([^}]+)}(">)', '\\1\\2\\3', ret)
     if (isTRUE(options[['toc']])) ret = paste(
       c(build_toc(ret, options[['toc_depth']]), ret), collapse = '\n'
     )
@@ -240,12 +257,28 @@ mark = function(
       ret = gsub(sprintf('!%s(.+?)%s!', id2, id2), '\\\\textsuperscript{\\1}', ret)
     if (has_sub)
       ret = gsub(sprintf('!%s(.+?)%s!', id3, id3), '\\\\textsubscript{\\1}', ret)
+    r4 = sprintf(
+      '(\\\\begin\\{verbatim}\n)%s(.+?)%s\n(.*?\n)(\\\\end\\{verbatim}\n)', id4, id4
+    )
+    ret = match_replace(ret, r4, function(x) {
+      info = gsub(r4, '\\2', x)
+      info = gsub('^\\{|}$', '', info)
+      i = info == '=latex'
+      x[i] = gsub(r4, '\\3', x[i])  # restore raw ```{=latex} content
+      i = !i & grepl('^=', info)
+      x[i] = ''  # discard other raw content
+      # TODO: support code highlighting for latex (listings or highr::hi_latex)
+      x = gsub(r4, '\\1\\3\\4', x)
+      x
+    })
     # fix horizontal rules from --- (\linethickness doesn't work)
     ret = gsub('{\\linethickness}', '{1pt}', ret, fixed = TRUE)
     ret = redefine_level(ret, options[['top_level']])
   }
 
   meta$body = ret
+  # convert some meta variables in case they use Markdown syntax
+  for (i in c('title', 'author', 'date')) meta[[i]] = render(meta[[i]], clean = TRUE)
   # use the template (if provided) to create a standalone document
   ret = build_output(format, options, template, meta)
   # remove \title and \maketitle if title is empty
@@ -256,39 +289,27 @@ mark = function(
 }
 
 #' @rdname mark
-#' @param ... Arguments to be passed to \code{mark()}. For \code{mark_html()},
-#'   also additional arguments for backward-compatibility with previous versions
-#'   of \pkg{markdown}. These are no longer recommended. For example, the
-#'   \code{stylesheet} argument should be replaced by the \code{css} variable in
-#'   \code{meta}, and the \code{fragment.only = TRUE} argument should be
-#'   specified via \code{options = '-standalone'} instead.
+#' @param ... Arguments to be passed to \code{mark()}.
 #' @export
 #' @examples
 #'
 #' mark_html('Hello _World_!', options = '-standalone')
 #' # write HTML to an output file
 #' mark_html('_Hello_, **World**!', output = tempfile())
-mark_html = function(..., options = NULL, template = TRUE, meta = list()) {
-  # for backward-compatibility of arguments `stylesheet`, `title`, `header`, etc.
-  extra = list(...)
-  # fragment_only -> !standalone (TODO: may drop fragment_only in future)
-  if (isTRUE(extra[['fragment.only']]) ||
-      (is.character(options) && 'fragment_only' %in% options)) template = FALSE
-  css = meta[['css']] %||% extra[['stylesheet']] %||% get_option(
-    c('markdown.html.css', 'markdown.html.stylesheet'),
-    pkg_file('resources', 'markdown.css')
-  )
-  meta = normalize_meta(meta)
-  title = meta[['title']] %||% extra[['title']]
-  header = meta[['header-includes']] %||% extra[['header']] %||%
-    get_option('markdown.html.header')
-
-  mark(
-    ..., format = 'html', options = options, template = template,
-    meta = merge_list(meta, drop_null(list(
-      css = css, title = title, `header-includes` = header
-    )))
-  )
+mark_html = function(..., template = TRUE) {
+  # TODO: remove these special treatments to arguments after PRs
+  # https://github.com/ajrgodfrey/BrailleR/pull/89 and
+  # https://github.com/renozao/pkgmaker/pull/6 are merged
+  args = list(...)
+  if (isTRUE(args$fragment.only)) {
+    template = FALSE
+    args$fragment.only = NULL
+  }
+  if ('stylesheet' %in% names(args)) {
+    args$meta = list(css = args$stylesheet)
+    args$stylesheet = NULL
+  }
+  do.call(mark, c(args, list(format = 'html', template = template)))
 }
 
 #' @export
@@ -303,7 +324,7 @@ mark_latex = function(..., template = TRUE) {
 # insert body and meta variables into a template
 build_output = function(format, options, template, meta) {
   if (!isTRUE(options[['standalone']]) || !format %in% c('html', 'latex') ||
-      xfun::isFALSE(template)) return(meta$body)
+      isFALSE(template)) return(meta$body)
   if (is.null(template) || isTRUE(template)) template = get_option(
     sprintf('markdown.%s.template', format),
     pkg_file('resources', sprintf('markdown.%s', format))
@@ -312,13 +333,17 @@ build_output = function(format, options, template, meta) {
   meta = normalize_meta(meta)
   if (format == 'html') {
     b = meta$body
-    if (is.null(meta[['title']])) meta$title = first_header(b)
-    if (is.null(meta[['math']]))
-      meta$math = if (isTRUE(options[['mathjax']]) && .requiresMathJax(b)) {
-        .mathJax(embed = isTRUE(options[['mathjax_embed']]))
-      }
-    if (is.null(meta[['highlight']]))
-      meta$highlight = highlight_js(options[['highlight_code']], b)
+    set_meta = function(name, value) {
+      if (!name %in% names(meta)) meta[[name]] <<- value
+    }
+    set_meta('title', first_header(b))
+    set_meta('css', pkg_file('resources', 'default.css'))
+    set_meta('math', if (isTRUE(options[['mathjax']]) && .requiresMathJax(b)) {
+      .mathJax(embed = isTRUE(options[['mathjax_embed']]))
+    })
+    set_meta('highlight', highlight_js(options[['highlight_code']], b))
+    # special handling for css/js "files" that have no extensions
+    for (i in c('css', 'js')) meta[[i]] = resolve_files(meta[[i]], i)
     tpl = tpl_html(tpl)
   }
   # find all variables in the template

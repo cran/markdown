@@ -13,11 +13,10 @@ mark(
   format = c("html", "latex"),
   options = NULL,
   template = FALSE,
-  meta = list(),
-  ...
+  meta = list()
 )
 
-mark_html(..., options = NULL, template = TRUE, meta = list())
+mark_html(..., template = TRUE)
 
 mark_latex(..., template = TRUE)
 }
@@ -63,12 +62,7 @@ to fill out the template by their names and values, e.g., \code{list(title
 = ...)} will replace the \code{$title$} variable in the template. See the
 \sQuote{Details} section for supported variables.}
 
-\item{...}{Arguments to be passed to \code{mark()}. For \code{mark_html()},
-also additional arguments for backward-compatibility with previous versions
-of \pkg{markdown}. These are no longer recommended. For example, the
-\code{stylesheet} argument should be replaced by the \code{css} variable in
-\code{meta}, and the \code{fragment.only = TRUE} argument should be
-specified via \code{options = '-standalone'} instead.}
+\item{...}{Arguments to be passed to \code{mark()}.}
 }
 \value{
 Invisible \code{NULL} when output is to a file, otherwise a character
@@ -100,14 +94,16 @@ Variables for the HTML template:
 
 \describe{
 
-\item{\code{css}}{Either a vector of CSS code or a file containing CSS to be
-included in the output. The default value is
-\code{getOption('markdown.html.css', markdown:::pkg_file('resources',
-'markdown.css'))}, i.e., it can be set via the global option
-\code{markdown.html.css}.}
+\item{\code{css}}{A vector of CSS code or files to be included in the output.
+The default value is \code{getOption('markdown.html.css',
+markdown:::pkg_file('resources', 'default.css'))}, i.e., it can be set via
+the global option \code{markdown.html.css}.}
 
 \item{\code{highlight}}{JavaScript code for syntax-highlighting code blocks.
 By default, the highlight.js library is used.}
+
+\item{\code{js}}{A vector of JavaScript code or JavaScript files to be
+included in the output.}
 
 \item{\code{math}}{JavaScript code for rendering LaTeX math. By default,
 MathJax is used.}
