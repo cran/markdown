@@ -1,5 +1,3 @@
-`%||%` = function(x, y) if (length(x)) x else y
-
 #' Convert some ASCII strings to HTML entities
 #'
 #' Transform ASCII strings \verb{(c)} (copyright), \verb{(r)} (registered
@@ -66,7 +64,9 @@ id_string = function(text, lens = c(2:10, 20), times = 20) {
 # a shorthand for gregexpr() and regmatches()
 match_replace = function(x, pattern, replace = identity, ...) {
   m = gregexpr(pattern, x, ...)
-  regmatches(x, m) = lapply(regmatches(x, m), replace)
+  regmatches(x, m) = lapply(regmatches(x, m), function(z) {
+    if (length(z)) replace(z) else z
+  })
   x
 }
 
@@ -97,52 +97,212 @@ restore_html = function(x) {
   x
 }
 
-# find the first header in html
-first_header = function(html) {
+# find the first heading in html
+first_heading = function(html) {
   m = regexpr(r <- '<(h[1-6])[^>]*?>(.+?)</\\1>', html, perl = TRUE)
   gsub(r, '\\2', regmatches(html, m))
 }
 
-.mathJax = local({
-  js = NULL
-  function(embed = FALSE, force = FALSE) {
-    url = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML'
-    # insert or link to MathJax script?
-    c('<!-- MathJax scripts -->', if (embed) {
-      # already in cache?
-      if (force || is.null(js)) js <<- xfun::read_utf8(url)
-      c('<script>', js)
-    } else {
-      sprintf('<script src="%s" async>', url)
-    }, '</script>')
-  }
-})
-
-.requiresMathJax = function(x) {
+.requireMathJS = function(x) {
   regs = c('\\\\\\(.+?\\\\\\)', '[$]{2}.+?[$]{2}', '\\\\\\[.+?\\\\\\]')
   for (i in regs) if (any(grepl(i, x, perl = TRUE))) return(TRUE)
   FALSE
 }
 
-highlight_js = function(opts, html) {
-  if (isTRUE(opts)) opts = list()
-  if (!is.list(opts) || !any(grepl('<code class="(language-)?[^"]+"', html)))
-    return()
-  # TODO: we could automatically detect <code> languages in html and load the
-  # necessary highlight.js language component (e.g., languages/latex.min.js)
-  opts = merge_list(
-    list(version = '11.6.0', style = 'github', languages = NULL), opts
+# set js/css variables according to the js_math option
+set_math = function(meta, options, html) {
+  o = js_options(options[['js_math']], 'katex', .requireMathJS(html))
+  if (is.null(o)) return(meta)
+  if (is_katex <- o$package == 'katex')
+    o$js = c(o$js, 'dist/contrib/auto-render.min.js')
+  js = js_combine(
+    sprintf('npm/%s%s/%s', o$package, o$version, o$js),
+    if (is_katex) 'npm/@xiee/utils/js/render-katex.js'
   )
-  tpl = one_string(pkg_file('resources', 'highlight.html'))
-  js = paste0(
-    sprintf('gh/highlightjs/cdn-release@%s/build/', opts$version),
-    c('highlight', sprintf('languages/%s', opts$languages)),
-    '.min.js', collapse = ','
-  )
-  tpl = sub_var(tpl, '$style$', opts$style)
-  tpl = sub_var(tpl, '$js$', js)
-  tpl
+  css = sprintf('@npm/%s%s/%s', o$package, o$version, o$css)
+  add_meta(meta, list(js = js, css = css))
 }
+
+# use jsdelivr's combine feature
+js_combine = function(...) {
+  if (length(x <- c(...))) paste0('@', paste(x, collapse = ','))
+}
+
+js_options = function(x, default, test) {
+  d = js_default(x, default)
+  x = if (is.list(x)) merge_list(d, x) else d
+  if (is.null(x) || !test) return()
+  if (x$version != '') x$version = sub('^@?', '@', x$version)
+  x
+}
+
+js_default = function(x, default) {
+  if (is.list(x)) x = x$package
+  if (is.null(x) || isTRUE(x)) x = default
+  if (is.character(x)) merge_list(js_libs[[x]], list(package = x))
+}
+
+js_libs = list(
+  highlight = list(
+    version = '11.7.0', style = 'xcode', js = 'build/highlight.min.js'
+  ),
+  katex = list(version = '', css = 'dist/katex.min.css', js = 'dist/katex.min.js'),
+  mathjax = list(version = '3', js = 'es5/tex-mml-chtml.js'),
+  prism = list(
+    version = '1.29.0', js = 'components/prism-core.min.js'
+  )
+)
+
+add_meta = function(x, v) {
+  for (i in names(v)) x[[i]] = c(v[[i]], x[[i]])
+  x
+}
+
+# set js/css variables according to the js_highlight option
+set_highlight = function(meta, options, html) {
+  r = '(?<=<code class="language-)([^"]+)(?=")'
+  o = js_options(options[['js_highlight']], 'prism', any(grepl(r, html, perl = TRUE)))
+  if (is.null(o)) return(meta)
+
+  p = o$package
+  # return jsdelivr subpaths
+  get_path = function(path) {
+    t = switch(
+      p, highlight = 'gh/highlightjs/cdn-release%s/%s', prism = 'npm/prismjs%s/%s'
+    )
+    sprintf(t, o$version, path)
+  }
+  # add the `prism-` prefix if necessary
+  normalize_prism = function(x) {
+    if (length(x) == 1 && x == 'prism') x else sub('^(prism-)?', 'prism-', x)
+  }
+
+  # if resources need to be embedded, we need to work harder to figure out which
+  # js files to embed (this is quite tricky and may not be robust)
+  embed = 'https' %in% options[['embed_resources']]
+
+  # style -> css
+  css = if (is.null(s <- o$style)) {
+    if (p == 'prism') 'prism-xcode'  # use prism-xcode.css in this package
+  } else if (is.character(s)) js_combine(get_path(switch(
+    p,
+    highlight = sprintf('build/styles/%s.min.css', s),
+    prism = sprintf('themes/%s.min.css', normalize_prism(s))
+  )))
+
+  # languages -> js
+  get_lang = function(x) switch(
+    p,
+    highlight = sprintf('build/languages/%s.min.js', x),
+    prism = sprintf('components/%s.min.js', normalize_prism(x))
+  )
+  autoloader = 'plugins/autoloader/prism-autoloader.min.js'
+  o$js = c(o$js, if (!is.null(l <- o$languages)) get_lang(l) else {
+    # detect <code> languages in html and load necessary language components
+    lang = unique(unlist(regmatches(html, gregexpr(r, html, perl = TRUE))))
+    f = switch(p, highlight = js_libs[[c(p, 'js')]], prism = autoloader)
+    if (!embed && p == 'prism') f else {
+      get_lang(lang_files(p, get_path(f), lang))
+    }
+  })
+  js = get_path(o$js)
+  if (p == 'highlight') js = c(js, 'npm/@xiee/utils/js/load-highlight.js')
+  # do not combine js when they are automatically detected (this will make
+  # embedding faster because each js is a separate URL that has been downloaded)
+  js = if (is.null(l)) paste0('@', js) else js_combine(js)
+
+  add_meta(meta, list(js = js, css = css))
+}
+
+# figure out which language support files are needed for highlight.js/prism.js
+lang_files = function(package, path, langs) {
+  u = jsdelivr(path, '')
+  x = xfun::download_cache$get(u, 'text')
+  x = one_string(I(x))
+
+  warn = function(l1, l2, url) warning(
+    "Unable to recognize code blocks with language(s): ", comma_list(l2),
+    ". They will not be syntax highlighted by ", package, ".js. If you can find ",
+    "the right language files at ", url, ", you may mangually specify their names ",
+    "in the 'languages' field of the 'js_highlight' option.",
+    if (length(l1)) c(" Also remember to add ", comma_list(l1))
+  )
+
+  if (package == 'highlight') {
+    # first figure out all languages bundles in highlight.js (starting with grmr_)
+    x = unlist(strsplit(x, ',\n?grmr_'))
+    r = '^([[:alnum:]_-]+):.+'
+    x = grep(r, x, value = TRUE)
+    l = gsub(r, '\\1', x)
+    # then find their aliases
+    m = gregexpr('(?<=aliases:\\[)[^]]+(?=\\])', x, perl = TRUE)
+    a = lapply(regmatches(x, m), function(z) {
+      z = unlist(strsplit(z, '[",]'))
+      z[!xfun::is_blank(z)]
+    })
+    l = c(l, unlist(a))  # all possible languages that can be highlighted
+    l = setdiff(langs, l)  # languages not supported by default
+    if (length(l) == 0) return()
+    # check if language files exist on CDN
+    d = paste0(dirname(u), '/languages/')
+    l1 = unlist(lapply(l, function(z) {
+      if (downloadable(sprintf('%s%s.min.js', d, z))) z
+    }))
+    l2 = setdiff(l, l1)
+    if (length(l2)) warn(l1, l2, d)
+    l1
+  } else {
+    # dependencies and aliases (the arrays should be more than 1000 characters)
+    m = gregexpr('(?<=\\{)([[:alnum:]_-]+:\\[?"[^}]{1000,})(?=\\})', x, perl = TRUE)
+    x = unlist(regmatches(x, m))
+    if (length(x) < 2) {
+      warning(
+        "Unable to process Prism's autoloader plugin (", u, ") to figure out ",
+        "language components automatically. Please report this message to ",
+        packageDescription('markdown')$BugReports, "."
+      )
+      return()
+    }
+    x = x[1:2]
+    m = gregexpr('([[:alnum:]_-]+):(\\["[^]]+\\]|"[^"]+")', x, perl = TRUE)
+    x = lapply(regmatches(x, m), function(z) {
+      z = gsub('[]["]', '', z)
+      unlist(lapply(strsplit(z, '[:,]'), function(y) {
+        setNames(list(y[-1]), y[1])
+      }), recursive = FALSE)
+    })
+    # x1 is dependencies; x2 is aliases
+    x1 = x[[1]]; x2 = unlist(x[[2]])
+    # normalize aliases to canonical names
+    i = langs %in% names(x2)
+    langs[i] = x2[langs[i]]
+    # resolve dependencies via recursion
+    resolve_deps = function(lang) {
+      deps = x1[[lang]]
+      c(lapply(deps, resolve_deps), lang)
+    }
+    # all languages required for this page
+    l1 = unique(unlist(lapply(langs, resolve_deps)))
+    # languages that are officially supported
+    l2 = c(names(x1), unlist(x1), x2)
+    # for unknown languages, check if they exist on CDN
+    d = sub('/plugins/.+', '/components/', u)
+    l3 = unlist(lapply(setdiff(l1, l2), function(z) {
+      if (!downloadable(sprintf('%sprism-%s.min.js', d, z))) z
+    }))
+    l4 = setdiff(l1, l3)
+    if (length(l3)) warn(l4, l3, d)
+    l4
+  }
+}
+
+# test if a URL can be downloaded
+downloadable = function(u, type = 'text') {
+  !xfun::try_error(xfun::download_cache$get(u, type))
+}
+
+# quote a vector and combine by commas
+comma_list = function(x) paste0('"', x, '"', collapse = ', ')
 
 # get an option using a case-insensitive name
 get_option = function(name, default = NULL) {
@@ -159,20 +319,34 @@ one_string = function(x) {
   paste(x, collapse = '\n')
 }
 
-# find headers and build a table of contents as an unordered list
+# find headings and build a table of contents as an unordered list
 build_toc = function(html, n = 3) {
   if (n <= 0) return()
   if (n > 6) n = 6
-  r = sprintf('<(h[1-%d])>([^<]+)</\\1>', n)
+  r = sprintf('<(h[1-%d])( id="[^"]+")?[^>]*>(.+?)</\\1>', n)
   items = unlist(regmatches(html, gregexpr(r, html, perl = TRUE)))
   if (length(items) == 0) return()
-  x = gsub(r, '<toc>\\2</toc>', items)  # use a tag <toc> to protect header text
-  h = as.integer(gsub('^h', '', gsub(r, '\\1', items)))  # header level
+  x = gsub(r, '<toc\\2>\\3</toc>', items)  # use a tag <toc> to protect heading text
+  h = as.integer(gsub('^h', '', gsub(r, '\\1', items)))  # heading level
   s = strrep('  ', seq_len(n) - 1)  # indent
   x = paste0(s[h], '- ', x)  # create an unordered list
   x = commonmark::markdown_html(x)
+  # add anchors on TOC items
+  x = gsub('<toc id="([^"]+)">(.+?)</toc>', '<a href="#\\1">\\2</a>', x)
   x = gsub('</?toc>', '', x)
+  # add class 'numbered' to the first <ul> if any heading is numbered
+  if (length(grep('<span class="section-number">', x)))
+    x = sub('<ul>', '<ul class="numbered">', x)
   paste0('<div id="TOC">\n', x, '</div>')
+}
+
+# add TOC to the html body
+add_toc = function(html, options) {
+  o = options[['toc']]
+  if (is.null(o) || isFALSE(o)) return(html)
+  if (isTRUE(o)) o = list()
+  if (!is.numeric(o$depth)) o$depth = 3
+  one_string(I(c(build_toc(html, o$depth), html)))
 }
 
 sec_levels = c('subsubsection', 'subsection', 'section', 'chapter', 'part')
@@ -186,21 +360,265 @@ redefine_level = function(x, top) {
   x
 }
 
-#' @importFrom utils URLdecode
-.b64EncodeImages = function(x) {
-  if (length(x) == 0) return(x)
-  reg = '<img\\s+src\\s*=\\s*"([^"]+)"'
-  m = gregexpr(reg, x, ignore.case = TRUE)
-  regmatches(x, m) = lapply(regmatches(x, m), function(z) {
-    src = sub(reg, '\\1', z)
-    # skip images already base64 encoded
-    for (i in grep('^data:.+;base64,.+', src, invert = TRUE)) {
-      if (file.exists(f <- URLdecode(src[i]))) z[i] = sub(
-        src[i], xfun::base64_uri(f), z[i], fixed = TRUE
+# move image attributes like `![](){#id .class width="20%"}`, heading attributes
+# `# foo {#id .class}`, and fenced Div's `::: {#id .class}` into HTML tags and
+# LaTeX commands
+move_attrs = function(x, format = 'html') {
+  if (format == 'html') {
+    # images
+    x = convert_attrs(x, '(<img src="[^>]+ )/>\\{([^}]+)\\}', '\\2', function(r, z, z2) {
+      z1 = sub(r, '\\1', z)
+      paste0(z1, z2, ' />')
+    })
+    # headings
+    x = convert_attrs(x, '(<h[1-6])(>.+?) \\{([^}]+)\\}(</h[1-6]>)', '\\3', function(r, z, z3) {
+      z1 = sub(r, '\\1 ', z)
+      z24 = sub(r, '\\2\\4', z)
+      paste0(z1, z3, z24)
+    })
+    # fenced Div's
+    x = convert_attrs(x, '<p>:::+ \\{(.+?)\\}</p>', '\\1', function(r, z, z1) {
+      # add attributes to the div but remove the data-latex attribute
+      z1 = str_trim(gsub('(^| )data-latex="[^"]*"( |$)', ' ', z1))
+      sprintf('<div %s>', z1)
+    })
+    x = gsub('<p>:::+</p>', '</div>', x)
+  } else if (format == 'latex') {
+    # only support image width
+    x = convert_attrs(x, '(\\\\includegraphics)(\\{[^}]+\\})\\\\\\{([^}]+)\\\\\\}', '\\3', function(r, z, z3) {
+      r2 = '(^|.* )width="([^"]+)"( .*|$)'
+      j = grepl(r2, z3)
+      w = gsub(r2, '\\2', z3[j])
+      w = gsub('\\\\', '\\', w, fixed = TRUE)
+      k = grep('%$', w)
+      w[k] = paste0(as.numeric(sub('%$', '', w[k])) / 100, '\\linewidth')
+      z3[j] = paste0('[width=', w, ']')
+      z3[!j] = ''
+      z1 = sub(r, '\\1', z)
+      z2 = sub(r, '\\2', z)
+      paste0(z1, z3, z2)
+    }, format)
+    # discard most attributes for headings
+    r = sprintf('(\\\\(%s)\\{.+?) \\\\\\{([^}]+)\\\\\\}(\\})', paste(sec_levels, collapse = '|'))
+    x = convert_attrs(x, r, '\\3', function(r, z, z3) {
+      z = gsub(r, '\\1\\4', z)
+      k = grepl('unnumbered', z3)
+      z[k] = sub('{', '*{', z[k], fixed = TRUE)
+      k = grepl('appendix', z3)
+      z[k] = '\\appendix'
+      z
+    }, format)
+    # fenced Div's
+    r = '\n\\\\begin\\{verbatim\\}\n(:::+)( \\{([^\n]+?)\\})? \\1\n\\\\end\\{verbatim\\}\n'
+    x = convert_attrs(x, r, '\\3', function(r, z, z3) {
+      r3 = '(^|.*? )class="([^" ]+)[" ].*? data-latex="([^"]*)".*$'
+      z3 = ifelse(
+        grepl(r3, z3), gsub(r3, '{\\2}\\3', z3), ifelse(z3 == '', '', '{@}')
       )
+      z3 = latex_envir(gsub('\\\\', '\\', z3, fixed = TRUE))
+      z3[z3 %in% c('\\begin{@}', '\\end{@}')] = ''
+      i = grep('^\\\\begin', z3)
+      z3[i] = paste0('\n', z3[i])
+      i = grep('^\\\\end', z3)
+      z3[i] = paste0(z3[i], '\n')
+      z3
+    }, format)
+  } else {
+    # TODO: remove attributes for other formats
+  }
+  x
+}
+
+convert_attrs = function(x, r, s, f, format = 'html') {
+  r2 = '(?<=^| )[.#]([[:alnum:]-]+)(?= |$)'
+  match_replace(x, r, perl = TRUE, function(y) {
+    if (format == 'html') {
+      z = gsub('[\U201c\U201d]', '"', y)
+    } else {
+      z = gsub('=``', '="', y, fixed = TRUE)
+      z = gsub("''( |\\\\})", '"\\1', z)
+      z = gsub('\\\\([#%])', '\\1', z)
+    }
+    z2 = sub(r, s, z)
+    # convert #id to id="" and .class to class=""
+    z2 = match_replace(z2, r2, perl = TRUE, function(a) {
+      i = grep('^[.]', a)
+      if ((n <- length(i))) {
+        # merge multiple classes into one class attribute
+        a[i] = sub('^[.]', '', a[i])
+        a[i] = c(rep('', n - 1), sprintf('class="%s"', paste(a[i], collapse = ' ')))
+        a = c(a[i], a[-i])
+      }
+      if (length(i <- grep('^#', a))) {
+        a[i] = gsub(r2, 'id="\\1"', a[i], perl = TRUE)
+        a = c(a[i], a[-i])  # make sure id is the first attribute
+      }
+      a
+    })
+    f(r, z, str_trim(z2))
+  })
+}
+
+str_trim = function(x) gsub('^\\s+|\\s+$', '', x)
+
+# {A}, '', {B}, {C}, '', '' -> \begin{A}\end{A}\begin{B}\begin{C}\end{C}\end{B}
+latex_envir = function(x, env = NULL) {
+  n = length(x)
+  if (n == 0) return()
+  x1 = x[1]
+  env2 = tail(env, 1)  # the most recent env is in the end
+  env = if (x1 == '') head(env, -1) else c(env, sub('^(\\{[^}]+}).*$', '\\1', x1))
+  c(if (x1 == '') paste0('\\end', env2) else paste0('\\begin', x1), latex_envir(x[-1], env))
+}
+
+# find and render footnotes for LaTeX output
+render_footnotes = function(x) {
+  f1 = f2 = NULL
+  # [^1] is converted to {[}\^{}1{]}
+  r = '(\n\n)(\\{\\[}\\\\\\^\\{}[0-9]+\\{\\]}): (.*?)\n(\n|$)'
+  x = match_replace(x, r, function(z) {
+    f1 <<- c(f1, sub(r, '\\2', z))
+    f2 <<- c(f2, sub(r, '\\3', z))
+    gsub(r, '\\1', z)
+  })
+  for (i in seq_along(f1)) {
+    x = sub(f1[i], sprintf('\\footnote{%s}', f2[i]), x, fixed = TRUE)
+  }
+  x
+}
+
+# add auto identifiers to headings
+auto_identifier = function(x) {
+  r = '<(h[1-6])([^>]*)>(.+?)</\\1>'
+  match_replace(x, r, perl = TRUE, function(z) {
+    z1 = sub(r, '\\1', z)  # tag
+    z2 = sub(r, '\\2', z)  # attrs
+    z3 = sub(r, '\\3', z)  # content
+    i = !grepl(' id="[^"]*"', z2)  # skip headings that already have IDs
+    id = unique_id(xfun::alnum_id(z3[i]), 'section')
+    z[i] = sprintf('<%s id="%s"%s>%s</%s>', z1[i], id, z2[i], z3[i], z1[i])
+    z
+  })
+}
+
+# add a number suffix to an id if it is duplicated
+unique_id = function(x, empty) {
+  x[x == ''] = empty
+  i = duplicated(x)
+  for (d in unique(x[i])) {
+    k = x == d
+    x[k] = paste0(x[k], '_', seq_len(sum(k)))
+  }
+  x
+}
+
+# number sections in HTML output
+number_sections = function(x) {
+  m = gregexpr('</h[1-6]>', x)
+  h = sub('</h([1-6])>', '\\1', unlist(regmatches(x, m)))
+  if (length(h) == 0) return(x)  # no headings
+  h = min(as.integer(h))  # highest level of headings
+  r = '<h([1-6])([^>]*)>(?!<span class="section-number">)'
+  n = rep(0, 6)  # counters for all levels of headings
+  # test if a class name exists in attributes
+  has_class = function(x, class) {
+    grepl(sprintf(' class="([^"]+ )?%s( [^"]+)?"', class), x)
+  }
+  match_replace(x, r, perl = TRUE, function(z) {
+    z1 = as.integer(sub(r, '\\1', z, perl = TRUE))
+    z2 = sub(r, '\\2', z, perl = TRUE)
+    num_sections = identity  # generate appendix numbers
+    for (i in seq_along(z)) {
+      k = z1[i]
+      if (k < 6) n[(k + 1):6] <<- 0
+      # skip unnumbered sections
+      if (has_class(z2[i], 'unnumbered')) next
+      if (has_class(z2[i], 'appendix')) {
+        if (k != h) stop(
+          "The 'appendix' attribute must be on the top-level heading (",
+          strrep('#', h), ').'
+        )
+        num_sections = local({
+          a = n[k]  # an offset
+          # number headings with A-Z or roman numerals
+          num = if (sum(z1[i:length(z)] == h) - 1 > length(LETTERS)) as.roman else {
+            function(i) LETTERS[i]
+          }
+          function(s) {
+            if (s[1] <= a) stop(
+              'An appendix section must start with the top-level heading (',
+              strrep('#', h), ').'
+            )
+            s[1] = num(s[1] - a)
+            s
+          }
+        })
+        next
+      }
+      n[k] <<- n[k] + 1
+      # remove leading 0's
+      s = if (h > 1) n[-(1:(h - 1))] else n
+      s = paste(num_sections(s), collapse = '.')
+      s = gsub('([.]0)+$', '', s)  # remove trailing 0's
+      if (!grepl('[.]', s)) s = paste0(s, '.')  # '1. section' instead of '1 section'
+      z[i] = paste0(z[i], sprintf('<span class="section-number">%s</span> ', s))
     }
     z
   })
+}
+
+#' @importFrom utils URLdecode
+embed_resources = function(x, embed = 'local') {
+  if (length(x) == 0) return(x)
+  embed = c('https', 'local') %in% embed
+  if (!any(embed)) return(x)
+
+  r = '(<img[^>]* src="|<!--#[^>]*? style="background-image: url\\("?)([^"]+?)("|"?\\);)'
+  x = match_replace(x, r, function(z) {
+    z1 = sub(r, '\\1', z)
+    z2 = sub(r, '\\2', z)
+    z3 = sub(r, '\\3', z)
+    # skip images already base64 encoded
+    for (i in grep('^data:.+;base64,.+', z2, invert = TRUE)) {
+      if (xfun::file_exists(f <- URLdecode(z2[i]))) {
+        z2[i] = xfun::base64_uri(f)
+      } else if (embed[1] && is_https(f)) {
+        z2[i] = xfun::download_cache$get(f, 'base64')
+      }
+    }
+    paste0(z1, z2, z3)
+  })
+
+  # CSS and JS
+  r = paste0(
+    '<link[^>]* rel="stylesheet" href="([^"]+)"[^>]*>|',
+    '<script[^>]* src="([^"]+)"[^>]*>\\s*</script>'
+  )
+  x2 = NULL  # to be appended to x
+  x = match_replace(x, r, function(z) {
+    z1 = sub(r, '\\1', z)  # css
+    z2 = sub(r, '\\2', z)  # js
+    js = z2 != ''
+    z3 = paste0(z1, z2)
+    # skip resources already base64 encoded
+    i1 = !grepl('^data:.+;base64,.+', z3)
+    z3[i1] = gen_tags(z3[i1], ifelse(js[i1], 'js', 'css'), embed[1], embed[2])
+    # for <script>s with defer/async, move them to the end of </body>
+    i2 = grepl(' (defer|async)(>| )', z) & js
+    x2 <<- c(x2, z3[i2])
+    z3[i2] = ''
+    z3
+  })
+  # move defer/async js to the end of <body>
+  if (length(x2)) {
+    x = if (length(grep('</body>', x)) != 1) {
+      one_string(I(c(x, x2)))
+    } else {
+      match_replace(x, '</body>', fixed = TRUE, function(z) {
+        one_string(I(c(x2, z)))
+      })
+    }
+  }
   x
 }
 
@@ -210,15 +628,38 @@ normalize_options = function(x, format = 'html') {
   n = names(x)
   n[n == 'hard_wrap'] = 'hardbreaks'
   n[n == 'tables'] = 'table'
+  n[n == 'base64_images'] = 'embed_resources'
   names(x) = n
   # default options
   d = option2list(markdown_options())
   g = option2list(g)
   d[names(g)] = g  # merge global options() into default options
   d[n] = x  # then merge user-provided options
-  if (!is.numeric(d[['toc_depth']])) d$toc_depth = 3L
   if (!is.character(d[['top_level']])) d$top_level = 'section'
+  # mathjax = true -> js_math = 'mathjax'
+  if (isTRUE(d[['mathjax']])) d$js_math = 'mathjax'
+  d$mathjax = NULL
+  # highlight_code -> js_highlight
+  if (!is.null(h <- d[['highlight_code']])) {
+    h$package = 'highlight'
+    d$js_highlight = h
+    d$highlight_code = NULL
+  }
+  d = normalize_embed(d)
+  # TODO: fully enable footnotes https://github.com/github/cmark-gfm/issues/314
+  if (format == 'html' && !is.logical(d[['footnotes']])) d$footnotes = TRUE
   d
+}
+
+normalize_embed = function(x) {
+  v = x[['embed_resources']]
+  if (is.logical(v)) {
+    v = if (v) 'local'
+  } else {
+    if (length(v) == 1 && v == 'all') v = c('local', 'https')
+  }
+  x[['embed_resources']] = v
+  x
 }
 
 #' @import stats
@@ -243,33 +684,41 @@ option2list = function(x) {
 }
 
 pkg_file = function(...) {
-  res = system.file(..., package = 'markdown', mustWork = TRUE)
-  # TODO: remove this hack after the next release of polmineR
-  if (!xfun::check_old_package('polmineR', '0.8.7')) return(res)
-  x = basename(file.path(...))
-  if (x == 'highlight.html') x = 'r_highlight.html'
-  if (x == 'default.css') x = 'markdown.css'
-  if (!x %in% c('markdown.css', 'markdown.html', 'r_highlight.html')) return(res)
-  download_old(x)
+  system.file(..., package = 'markdown', mustWork = TRUE)
 }
 
-# cache downloaded file
-download_old = local({
-  db = list()
-  function(file) {
-    if (!is.null(db[[file]])) return(db[[file]])
-    u = sprintf('https://cdn.jsdelivr.net/gh/rstudio/markdown@v1.3/inst/resources/%s', file)
-    f = tempfile()
-    xfun::download_file(u, f, quiet = TRUE)
-    db[[file]] <<- f
-    f
-  }
-})
+jsdelivr = function(file, dir = 'gh/rstudio/markdown/inst/resources/') {
+  sprintf('https://cdn.jsdelivr.net/%s%s', dir, file)
+}
 
 # resolve CSS/JS shorthand filenames to actual paths (e.g., 'default' to 'default.css')
 resolve_files = function(x, ext = 'css') {
   if (length(x) == 0) return(x)
+  # @foo -> jsdelivr.net/gh/rstudio/markdown
+  i0 = grepl('^@', x)
+  x[i0] = sub('^@', '', x[i0])
+  i = i0 & !grepl('/', x)
+  x[i] = jsdelivr(xfun::with_ext(x[i], ext))
+  # @foo/bar -> jsdelivr.net/foo/bar
+  i = i0 & !grepl(',', x)
+  x[i] = jsdelivr(x[i], '')
+  # @foo/bar,baz -> jsdelivr.net/combine/foo/bar,foo/baz
+  i = i0 & grepl(',', x)
+  if (any(i)) x[i] = sapply(strsplit(x[i], ','), function(z) {
+    d = dirname(z[1])
+    for (j in 2:length(z)) {
+      if (grepl('/', z[j])) {
+        d = dirname(z[j])
+      } else {
+        z[j] = paste(d, z[j], sep = '/')
+      }
+    }
+    paste0('combine/', paste(z, collapse = ','))
+  })
+  x[i] = jsdelivr(x[i], '')
+  # built-in resources in this package
   i = dirname(x) == '.' & xfun::file_ext(x) == '' & !xfun::file_exists(x)
+  x[i & (x == 'slides')] = 'snap'  # alias slides.css -> snap.css
   files = list.files(pkg_file('resources'), sprintf('[.]%s$', ext), full.names = TRUE)
   b = xfun::sans_ext(basename(files))
   if (any(!x[i] %in% b)) stop(
@@ -277,89 +726,105 @@ resolve_files = function(x, ext = 'css') {
     " (possible values are: ", paste0("'", b, "'", collapse = ','), ")"
   )
   x[i] = files[match(x[i], b)]
-  xfun::read_all(x)
+  x = c(x[i], x[!i])
+  if (ext %in% c('css', 'js')) gen_tags(x, ext) else xfun::read_all(x)
 }
 
-# partition the YAML metadata from the document body and parse it
-split_yaml = function(x) {
-  i = grep('^---\\s*$', x)
-  n = length(x)
-  res = if (n < 2 || length(i) < 2 || (i[1] > 1 && !all(is_blank(x[seq(i[1] - 1)])))) {
-    list(yaml = list(), body = x)
-  } else list(
-    yaml = x[i[1]:i[2]], body = c(rep('', i[2]), tail(x, n - i[2]))
-  )
-  if ((n <- length(res$yaml)) >= 3) {
-    res$yaml = yaml_load(res$yaml[-c(1, n)])
+# generate tags for css/js depending on whether they need to be embedded or offline
+gen_tag = function(x, ext = '', embed_https = FALSE, embed_local = FALSE) {
+  if (ext == 'css') {
+    t1 = '<link rel="stylesheet" href="%s">'
+    t2 = c('<style type="text/css">', '</style>')
+  } else if (ext == 'js') {
+    t1 = '<script src="%s" defer></script>'
+    t2 = c('<script>', '</script>')
+  } else stop("The file extension '", ext, "' is not supported.")
+  is_web = is_https(x)
+  is_rel = !is_web && xfun::is_rel_path(x)
+  if (is_web && embed_https && xfun::url_filename(x) == 'MathJax.js') {
+    warning('MathJax.js cannot be embedded. Please use MathJax v3 instead.')
+    embed_https = FALSE
   }
-  res
+  if ((is_rel && !embed_local) || (is_web && !embed_https)) {
+    # linking for 1) local rel paths that don't need to be embedded, or 2) web
+    # resources that don't need to be accessed offline
+    sprintf(t1, x)
+  } else {
+    # embedding for other cases
+    one_string(I(c(t2[1], resolve_external(x, is_web, ext), t2[2])))
+  }
 }
 
-yaml_load = function(x, use_yaml = xfun::loadable('yaml')) {
-  if (use_yaml) {
-    res = xfun::try_silent(yaml::yaml.load(x, eval.expr = TRUE))
-    if (!inherits(res, 'try-error')) return(res)
-    warning(paste(c(x, '\nThe above YAML metadata may be invalid:\n', res), collapse = '\n'))
-  }
-  # the below simple parser is quite limited
-  res = list()
-  r = '^( *)([^ ]+?):($|\\s+.*)'
-  x = xfun::split_lines(x)
-  x = x[grep(r, x)]
-  x = x[grep('^\\s*#', x, invert = TRUE)]  # comments
-  if (length(x) == 0) return(res)
-  lvl = gsub(r, '\\1', x)  # indentation level
-  key = gsub(r, '\\2', x)
-  val = gsub('^\\s*|\\s*$', '', gsub(r, '\\3', x))
-  keys = NULL
-  for (i in seq_along(x)) {
-    keys = c(head(keys, nchar(lvl[i])/2), key[i])
-    res[[keys]] = if (is_blank(val[i])) list() else yaml_value(val[i])
-  }
-  res
-}
+is_https = function(x) grepl('^https://', x)
 
-is_blank = function(x) grepl('^\\s*$', x)
+# a vectorized version
+gen_tags = function(...) mapply(gen_tag, ...)
 
-# only support scalar logical, numeric, and character values
-yaml_value = function(x) {
-  v = tolower(x)
-  if (v == 'null') return()
-  if (grepl('^true|false$', v)) return(as.logical(x))
-  if (grepl('^[0-9.e+-]', v)) {
-    v = suppressWarnings(as.numeric(v))
-    if (!is.na(v)) return(v)
-  }
-  gsub('^["\']|["\']$', '', x)  # remove optional quotes for strings
-}
-
-# TODO: remove this function when revdeps have been fixed
-.b64EncodeFile = function(...) xfun::base64_uri(...)
-
-# TODO: remove this after https://github.com/PolMine/polmineR/issues/235 is fixed
-.onLoad = function(lib, pkg) {
-  if (is.null(getOption('markdown.HTML.stylesheet')) && 'polmineR' %in% loadedNamespaces()) {
-    if (xfun::check_old_package('polmineR', '0.8.7')) {
-      options(markdown.HTML.stylesheet = pkg_file('resources', 'default.css'))
-    } else if (packageVersion('polmineR') == '0.8.7') {
-      warning("Sorry, but the 'markdown' does not work with 'polmineR' 0.8.7: https://github.com/PolMine/polmineR/issues/235")
+# read CSS/JS and embed external fonts/background images, etc.
+resolve_external = function(x, web = TRUE, ext = '') {
+  # download and cache web resources
+  txt = if (web) xfun::download_cache$get(x, 'text', handler = function(code) {
+    # remove jsdelivr comments
+    if (grepl('^https://cdn[.]jsdelivr[.]net/', x)) {
+      code = gsub(
+        '^/[*][*]\n( [*][^\n]*\n)+ [*]/\n|\n/[*/]# sourceMappingURL=.+[.]map( [*]/)?$',
+        '', one_string(I(code))
+      )
+      code = base64_url(x, code, ext)
     }
+    code
+  }) else {
+    base64_url(x, xfun::read_utf8(x), ext)
   }
 }
 
-# TODO: remove these hacks eventually
-tweak_html = function(x, text) {
-  if (xfun::check_old_package('plumbertableau', '0.1.0') ||
-      xfun::check_old_package('polmineR', '0.8.7')) {
-    # remove extra blockquote
-    x = gsub('</blockquote>\n<blockquote>', '', x)
-    # double \n
-    x = gsub('>\n<(p|h3|blockquote)>', '>\n\n<\\1>', x)
-    # tweak language class names
-    x = gsub('(<code class=")language-([^"]+)(">)', '\\1\\2\\3', x)
-    # preserve trailing spaces
-    if (length(sp <- xfun::grep_sub('.*?( +)\n*?$', '\\1', tail(paste(text, collapse = '\n'), 1))))
-      x = gsub('></p>(\n+)?$', paste0('>', sp, '</p>\\1'), x)
+# find url("path") in JS/CSS and base64 encode the resources
+base64_url = function(url, code, ext) {
+  d = dirname(url)
+  # embed fonts in mathjax's js
+  if (grepl('^https://cdn[.]jsdelivr[.]net/npm/mathjax.+[.]js$', url)) {
+    r = '.*?fontURL:[^"]+\\("([^"]+)".*'  # output/chtml/fonts/woff-v2
+    p = xfun::grep_sub(r, '\\1', code)
+    if (length(p) == 1) code = match_replace(
+      code, '(?<=src:\'url\\(")(%%URL%%/[^"]+)(?="\\))', function(u) {
+        u = sub('%%URL%%', paste(d, p, sep = '/'), u, fixed = TRUE)
+        unlist(lapply(u, function(x) xfun::download_cache$get(x, 'base64')))
+      }, perl = TRUE
+    ) else warning(
+      'Unable to determine the font path in MathJax. Please report an issue to ',
+      'https://github.com/rstudio/markdown/issues and mention the URL ', url, '.'
+    )
   }
+  # find `attr: url(resource)` and embed url resources in CSS
+  if (ext == 'css') {
+    r = '(: ?url\\("?)([^)]+)("?\\))'
+    code = match_replace(code, r, function(z) {
+      z1 = gsub(r, '\\1', z)
+      z2 = gsub(r, '\\2', z)
+      z3 = gsub(r, '\\3', z)
+      i = !is_https(z2)
+      z2[i] = paste(d, z2[i], sep = '/')
+      z2 = unlist(lapply(z2, function(x) {
+        if (is_https(x)) xfun::download_cache$get(x, 'base64') else xfun::base64_uri(x)
+      }))
+      paste0(z1, z2, z3)
+    }, perl = TRUE)
+  }
+  code
+}
+
+# compact HTML code
+clean_html = function(x) {
+  # TODO: remove this hack (https://github.com/rstudio/plumbertableau/pull/84)
+  if (check_old()) return(gsub('>\n<p>', '>\n\n<p>', x))  # double \n
+  x = gsub('\n+(\n<[a-z1-6]+[^>]*>|\n</(body|div|head|html)>)', '\\1', x)
+  # can also merge <style>/<script> tags (<style type="text/css">).+?</style>\\s*\\1
   x
 }
+
+check_old = function() {
+  xfun::check_old_package('plumbertableau', '0.1.0')
+}
+
+# TODO: remove this after new release of https://github.com/rstudio/leaflet
+.b64EncodeFile = function(...) xfun::base64_uri(...)

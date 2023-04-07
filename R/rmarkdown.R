@@ -14,7 +14,7 @@ output_format = function(to = 'html') {
     }
     rmarkdown::output_format(
       NULL, opts, keep_md = keep_md,
-      clean_supporting = isTRUE(normalize_options(options)[['base64_images']])
+      clean_supporting = 'local' %in% normalize_options(options)[['embed_resources']]
     )
   }
 }
@@ -46,9 +46,9 @@ html_format = output_format('html')
 #' @export
 latex_format = output_format('latex')
 
-# get metadata from the `meta` field under an output format
-format_meta = function(yaml, format) {
+# get metadata from a certain field under an output format
+yaml_field = function(yaml, format, name = 'meta') {
   if (is.list(out <- yaml[['output']]) &&
       is.list(out <- out[[sprintf('markdown::%s_format', format)]]))
-    out[['meta']]
+    out[[name]]
 }

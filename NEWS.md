@@ -1,3 +1,29 @@
+# CHANGES IN markdown VERSION 1.6
+
+- Added support for footnotes, fenced `Div`s, section numbers, `{}` attributes for images/headings/fenced `Div`s, and appendices. See `vignette('intro', package = 'markdown')` for details.
+
+- A lot of enhancements to the HTML slides format. See `vignette('slides', package = 'markdown')` for details.
+
+- Added `vignette('article', package = 'markdown')` to demonstrate how to write an HTML article.
+
+- If the input to `mark()` is a file, the output will also be a file by default. Previously the output would be text. If you want `mark()` to return text output when the input is a file, you may specify the argument `output = NULL`.
+
+- The Markdown option `base64_images` has been renamed to `embed_resources`. This option can take two possible values, `"local"` and `"https"`, meaning whether to embed local and/or web (https) resources. You can specify none, either, or both of them. See `vignette('intro', package = 'markdown')` for details.
+
+- Removed the option `standalone` from the list of Markdown options. Please use the argument `template = TRUE/FALSE` of `mark()` instead. The option `standalone = TRUE` was equivalent to `template = TRUE`.
+
+- Added the option `auto_identifiers` (enabled by default) to automatically add IDs to headings, e.g., `# Hello world!` will be converted to `<h1 id="hello-world">Hello world!</h1>`. You can certainly override the automatic ID by providing an ID manually via the `{#id}` attribute, e.g., `# Hello world! {#hello}`.
+
+- Renamed the `mathjax` option to `js_math` to allow for other JS math libraries. The default library was changed from MathJax to KaTeX. To continue using MathJax, you may set `js_math: mathjax`.
+
+- Removed the option `mathjax_embed` from the list of Markdown options. To embed the MathJax library, enable `"https"` in the `embed_resources` option instead. Note that only MathJax v3 can be partially embedded, and lower versions cannot.
+
+- Renamed the option `highlight_code` to `js_highlight`, and added support for an alternative syntax highlighting JS library Prism.js, which became the default. To continue using the old default `highlight.js`, you may set the `js_highlight` option to `highlight`.
+
+- The default version of MathJax has been changed from v2 to v3.
+
+- The default version of highlight.js has been changed from 11.6.0 to 11.7.0, and the default style has been switched from `github` to `xcode`.
+
 # CHANGES IN markdown VERSION 1.5
 
 - Values of meta variables `title`, `author`, and `date` (if provided) will be transformed to the target output format before they are passed into templates.

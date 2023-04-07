@@ -30,7 +30,11 @@ have a \dQuote{file extension} and should be treated as Markdown text
 instead, wrap it in \code{I()}.}
 
 \item{output}{Output file path. If not character, the results will be
-returned as a character vector.}
+returned as a character vector. If not specified and the input is a file
+path, the output file path will have the same base name as the input file,
+with an extension corresponding to the \code{format} argument, e.g.,
+\code{mark('foo.md', format = 'latex')} will generate an output file
+\file{foo.tex} by default.}
 
 \item{text}{A character vector of the Markdown text. By default, it is read
 from \code{file}.}
@@ -41,14 +45,14 @@ from \code{file}.}
 \pkg{commonmark}.}
 
 \item{options}{Options to be passed to the renderer. See
-\code{\link{markdown_options}()} for all possible options. This argument
-can take either a character vector of the form \code{"+option1
-option2-option3"} (use \code{+} or a space to enable an option, and
-\code{-} to disable an option), or a list of the form \code{list(option1 =
-value1, option2 = value2, ...)}. A string \code{"+option1"} is equivalent
-to \code{list(option1 = TRUE)}, and \code{"-option2"} means
-\code{list(option2 = FALSE)}. Options that do not take logical values must
-be specified via a list, e.g., \code{list(width = 30)}.}
+\code{\link{markdown_options}()} for details. This argument can take either
+a character vector of the form \code{"+option1 option2-option3"} (use
+\code{+} or a space to enable an option, and \code{-} to disable an
+option), or a list of the form \code{list(option1 = value1, option2 =
+value2, ...)}. A string \code{"+option1"} is equivalent to
+\code{list(option1 = TRUE)}, and \code{"-option2"} means \code{list(option2
+= FALSE)}. Options that do not take logical values must be specified via a
+list, e.g., \code{list(width = 30)}.}
 
 \item{template}{Path to a template file. The default value is
 \code{getOption('markdown.FORMAT.template',
@@ -60,7 +64,8 @@ logical value: \code{TRUE} means to use the default template, and
 \item{meta}{A named list of metadata. Elements in the metadata will be used
 to fill out the template by their names and values, e.g., \code{list(title
 = ...)} will replace the \code{$title$} variable in the template. See the
-\sQuote{Details} section for supported variables.}
+Section \dQuote{YAML metadata} in the vignette \code{vignette('intro',
+package = 'markdown')} for supported variables.}
 
 \item{...}{Arguments to be passed to \code{mark()}.}
 }
@@ -70,63 +75,9 @@ Invisible \code{NULL} when output is to a file, otherwise a character
 }
 \description{
 Render Markdown to an output format via the \pkg{commonmark} package. The
-function \code{mark_html()} is a shorthand of \code{mark(format = 'html')},
-and \code{mark_latex()} is a shorthand of \code{mark(format = 'latex')}.
-}
-\details{
-Supported variables in metadata for both HTML and HTML templates (the string
-\code{FORMAT} below is the output format name, i.e., \code{html} or
-\code{latex}):
-
-\describe{
-
-\item{\code{header-includes}, \code{include-before},
-\code{include-after}}{Either a vector of code (HTML/LaTeX) or a code file to
-be included in the header, before the body, or after the body of the output.
-For \code{header-include}, the default value is taken from
-\code{getOption('markdown.FORMAT.header')} if not provided in \code{meta}.}
-
-\item{\code{title}}{The document title.}
-
-}
-
-Variables for the HTML template:
-
-\describe{
-
-\item{\code{css}}{A vector of CSS code or files to be included in the output.
-The default value is \code{getOption('markdown.html.css',
-markdown:::pkg_file('resources', 'default.css'))}, i.e., it can be set via
-the global option \code{markdown.html.css}.}
-
-\item{\code{highlight}}{JavaScript code for syntax-highlighting code blocks.
-By default, the highlight.js library is used.}
-
-\item{\code{js}}{A vector of JavaScript code or JavaScript files to be
-included in the output.}
-
-\item{\code{math}}{JavaScript code for rendering LaTeX math. By default,
-MathJax is used.}
-
-}
-
-Variables for the LaTeX template:
-
-\describe{
-
-\item{\code{classoption}}{A string containing options for the document
-class.}
-
-\item{\code{documentclass}}{The document class (by default,
-\code{'article'}).}
-
-}
-
-Note that you can use either underscores or hyphens in the variable names.
-Underscores will be normalized to hyphens internally, e.g.,
-\code{header_includes} will be converted to \code{header-includes}. This
-means if you use a custom template, you must use hyphens instead of
-underscores as separators in variable names in the template.
+function \code{mark_html()} is a shorthand of \code{mark(format = 'html',
+template = TRUE)}, and \code{mark_latex()} is a shorthand of
+\code{mark(format = 'latex', template = TRUE)}.
 }
 \examples{
 library(markdown)
@@ -139,7 +90,7 @@ mark(I("This is *not* a file.md"))
 # that's equivalent to
 mark(text = "This is *not* a file.md")
 
-mark_html("Hello _World_!", options = "-standalone")
+mark_html("Hello _World_!", template = FALSE)
 # write HTML to an output file
 mark_html("_Hello_, **World**!", output = tempfile())
 

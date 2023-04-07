@@ -1,62 +1,9 @@
 #' Render Markdown to an output format
 #'
 #' Render Markdown to an output format via the \pkg{commonmark} package. The
-#' function \code{mark_html()} is a shorthand of \code{mark(format = 'html')},
-#' and \code{mark_latex()} is a shorthand of \code{mark(format = 'latex')}.
-#'
-#' Supported variables in metadata for both HTML and HTML templates (the string
-#' \code{FORMAT} below is the output format name, i.e., \code{html} or
-#' \code{latex}):
-#'
-#' \describe{
-#'
-#' \item{\code{header-includes}, \code{include-before},
-#' \code{include-after}}{Either a vector of code (HTML/LaTeX) or a code file to
-#' be included in the header, before the body, or after the body of the output.
-#' For \code{header-include}, the default value is taken from
-#' \code{getOption('markdown.FORMAT.header')} if not provided in \code{meta}.}
-#'
-#' \item{\code{title}}{The document title.}
-#'
-#' }
-#'
-#' Variables for the HTML template:
-#'
-#' \describe{
-#'
-#' \item{\code{css}}{A vector of CSS code or files to be included in the output.
-#' The default value is \code{getOption('markdown.html.css',
-#' markdown:::pkg_file('resources', 'default.css'))}, i.e., it can be set via
-#' the global option \code{markdown.html.css}.}
-#'
-#' \item{\code{highlight}}{JavaScript code for syntax-highlighting code blocks.
-#' By default, the highlight.js library is used.}
-#'
-#' \item{\code{js}}{A vector of JavaScript code or JavaScript files to be
-#' included in the output.}
-#'
-#' \item{\code{math}}{JavaScript code for rendering LaTeX math. By default,
-#' MathJax is used.}
-#'
-#' }
-#'
-#' Variables for the LaTeX template:
-#'
-#' \describe{
-#'
-#' \item{\code{classoption}}{A string containing options for the document
-#' class.}
-#'
-#' \item{\code{documentclass}}{The document class (by default,
-#' \code{'article'}).}
-#'
-#' }
-#'
-#' Note that you can use either underscores or hyphens in the variable names.
-#' Underscores will be normalized to hyphens internally, e.g.,
-#' \code{header_includes} will be converted to \code{header-includes}. This
-#' means if you use a custom template, you must use hyphens instead of
-#' underscores as separators in variable names in the template.
+#' function \code{mark_html()} is a shorthand of \code{mark(format = 'html',
+#' template = TRUE)}, and \code{mark_latex()} is a shorthand of
+#' \code{mark(format = 'latex', template = TRUE)}.
 #' @param file Path to an input file. If not provided, it is presumed that the
 #'   \code{text} argument will be used instead. This argument can also take a
 #'   character vector of Markdown text directly. To avoid ambiguity in the
@@ -65,7 +12,11 @@
 #'   have a \dQuote{file extension} and should be treated as Markdown text
 #'   instead, wrap it in \code{I()}.
 #' @param output Output file path. If not character, the results will be
-#'   returned as a character vector.
+#'   returned as a character vector. If not specified and the input is a file
+#'   path, the output file path will have the same base name as the input file,
+#'   with an extension corresponding to the \code{format} argument, e.g.,
+#'   \code{mark('foo.md', format = 'latex')} will generate an output file
+#'   \file{foo.tex} by default.
 #' @param text A character vector of the Markdown text. By default, it is read
 #'   from \code{file}.
 #' @param format An output format supported by \pkg{commonmark}, e.g.,
@@ -73,14 +24,14 @@
 #'   \code{\link[commonmark:commonmark]{markdown_*}} renderers in
 #'   \pkg{commonmark}.
 #' @param options Options to be passed to the renderer. See
-#'   \code{\link{markdown_options}()} for all possible options. This argument
-#'   can take either a character vector of the form \code{"+option1
-#'   option2-option3"} (use \code{+} or a space to enable an option, and
-#'   \code{-} to disable an option), or a list of the form \code{list(option1 =
-#'   value1, option2 = value2, ...)}. A string \code{"+option1"} is equivalent
-#'   to \code{list(option1 = TRUE)}, and \code{"-option2"} means
-#'   \code{list(option2 = FALSE)}. Options that do not take logical values must
-#'   be specified via a list, e.g., \code{list(width = 30)}.
+#'   \code{\link{markdown_options}()} for details. This argument can take either
+#'   a character vector of the form \code{"+option1 option2-option3"} (use
+#'   \code{+} or a space to enable an option, and \code{-} to disable an
+#'   option), or a list of the form \code{list(option1 = value1, option2 =
+#'   value2, ...)}. A string \code{"+option1"} is equivalent to
+#'   \code{list(option1 = TRUE)}, and \code{"-option2"} means \code{list(option2
+#'   = FALSE)}. Options that do not take logical values must be specified via a
+#'   list, e.g., \code{list(width = 30)}.
 #' @param template Path to a template file. The default value is
 #'   \code{getOption('markdown.FORMAT.template',
 #'   markdown:::pkg_file('resources', 'markdown.FORMAT'))} where \code{FORMAT}
@@ -90,7 +41,8 @@
 #' @param meta A named list of metadata. Elements in the metadata will be used
 #'   to fill out the template by their names and values, e.g., \code{list(title
 #'   = ...)} will replace the \code{$title$} variable in the template. See the
-#'   \sQuote{Details} section for supported variables.
+#'   Section \dQuote{YAML metadata} in the vignette \code{vignette('intro',
+#'   package = 'markdown')} for supported variables.
 #' @return Invisible \code{NULL} when output is to a file, otherwise a character
 #'   vector of the rendered output.
 #' @seealso The spec of GitHub Flavored Markdown:
@@ -117,14 +69,21 @@ mark = function(
   }
   text = xfun::split_lines(text)
 
-  part = split_yaml(text); yaml = part$yaml; text = part$body
+  part = xfun::yaml_body(text); yaml = part$yaml; text = part$body
   format = format[1]
   # title/author/date can be provided as top-level YAML options
   meta = merge_list(
     yaml[intersect(names(yaml), c('title', 'author', 'date'))],
-    format_meta(yaml, format),
+    yaml_field(yaml, format),
     meta
   )
+
+  if (missing(output) && is_file(file)) {
+    ext = switch(format, commonmark = 'markdown', latex = 'tex', text = 'txt', format)
+    output = xfun::with_ext(file, ext)
+    if (xfun::same_path(file, output))
+      stop('The output file path is the same as input: ', file)
+  }
 
   render_fun = tryCatch(
     getFromNamespace(paste0('markdown_', tolower(format)), 'commonmark'),
@@ -133,10 +92,17 @@ mark = function(
     }
   )
 
+  options = merge_list(yaml_field(yaml, format, 'options'), option2list(options))
   options = normalize_options(options, format)
   options$extensions = intersect(
     names(Filter(isTRUE, options)), commonmark::list_extensions()
   )
+
+  # if `template` was specified in YAML, try to override `template = TRUE/NULL`
+  if (isTRUE(template)) template = NULL
+  if (is.null(template)) template = yaml_field(yaml, format, 'template')
+  # backward-compatibility (the standalone option may be dropped someday)
+  if (isFALSE(options[['standalone']])) template = FALSE
 
   render_args = options[intersect(names(formals(render_fun)), names(options))]
   render = function(x, clean = FALSE) {
@@ -163,7 +129,7 @@ mark = function(
     # like &<> in math expressions to be converted to entities, but shouldn't
     # convert them for latex output
     if (format == 'latex') {
-      text = paste(text, collapse = '\n')
+      text = one_string(I(text))
       text = match_replace(text, sprintf('`%s.{3,}?%s`', id, id), function(x) {
         maths <<- c(maths, gsub(sprintf('`%s|%s`', id, id), '', x))
         # replace math with !id-n-id! where n is the index of the math
@@ -174,22 +140,23 @@ mark = function(
   }
 
   p = NULL  # indices of prose
+  find_prose = function() if (is.null(p)) p <<- xfun::prose_index(text)
   # superscript and subscript; for now, we allow only characters alnum|*|(|) for
   # script text but can consider changing this rule upon users' request
-  r2 = '(?<=[[:graph:]])\\^([[:alnum:]*()]+?)\\^'
+  r2 = '(?<!`)\\^([[:alnum:]*()]+?)\\^(?!`)'
   if (has_sup <- test_feature('superscript', r2)) {
     id2 = id_string(text)
-    p = xfun::prose_index(text)
+    find_prose()
     text[p] = match_replace(text[p], r2, perl = TRUE, function(x) {
       # place superscripts inside !id...id!
       x = gsub('^\\^|\\^$', id2, x)
       sprintf('!%s!', x)
     })
   }
-  r3 = '(?<![~[:space:]])~([[:alnum:]*()]+?)~'
+  r3 = '(?<![~`[:space:]])~([[:alnum:]*()]+?)~(?!`)'
   if (has_sub <- test_feature('subscript', r3)) {
     id3 = id_string(text)
-    if (is.null(p)) p = xfun::prose_index(text)
+    find_prose()
     text[p]= match_replace(text[p], r3, perl = TRUE, function(x) {
       # place subscripts inside !id...id!
       x = gsub('^~|~$', id3, x)
@@ -198,10 +165,18 @@ mark = function(
   }
   # disallow single tilde for <del> (I think it is an awful idea in GFM's
   # strikethrough extension to allow both single and double tilde for <del>)
-  if (is.null(p)) p = xfun::prose_index(text)
+  find_prose()
   text[p] = match_replace(text[p], r3, perl = TRUE, function(x) {
     gsub('^~|~$', '\\\\~', x)
   })
+  # add line breaks before/after fenced Div's to wrap ::: tokens into separate
+  # paragraphs or code blocks
+  text[p] = sub('^([ >]*:::+ )([^ {]+)$', '\\1{.\\2}', text[p]) # ::: foo -> ::: {.foo}
+  text[p] = sub(
+    '^([ >]*)((:::+)( \\{.+\\})?)$',
+    if (format == 'latex') '\\1\n\\1```\n\\1\\2 \\3\n\\1```\n\\1' else '\\1\n\\1\\2\n\\1',
+    text[p]
+  )
 
   # put info string inside code blocks so the info won't be lost, e.g., ```r -> ```\nr
   if (format == 'latex') {
@@ -212,9 +187,9 @@ mark = function(
   }
 
   ret = render(text)
+  ret = move_attrs(ret, format)  # apply attributes of the form {attr="value"}
 
   if (format == 'html') {
-    ret = tweak_html(ret, text)
     if (has_math) {
       ret = gsub(sprintf('<code>%s(.{5,}?)%s</code>', id, id), '\\1', ret)
       # `\(math\)` may fail to render to <code>\(math\)</code> when backticks
@@ -227,22 +202,29 @@ mark = function(
       ret = gsub(sprintf('!%s(.+?)%s!', id3, id3), '<sub>\\1</sub>', ret)
     r4 = '<pre><code class="language-\\{=([^}]+)}">(.+?)</code></pre>\n'
     ret = match_replace(ret, r4, function(x) {
+      lang = gsub(r4, '\\1', x)
+      code = gsub(r4, '\\2', x)
       # restore raw html content from ```{=html}
-      i = gsub(r4, '\\1', x) == 'html'
-      x[i] = restore_html(gsub(r4, '\\2', x[i]))
+      i1 = lang == 'html'
+      x[i1] = restore_html(code[i1])
+      # possible math environments
+      i2 = (lang %in% c('tex', 'latex')) &
+        grepl('^\\\\begin\\{[a-zA-Z*]+\\}.+\\\\end\\{[a-zA-Z*]+\\}\n$', code)
+      x[i2] = sprintf('<p>\n%s</p>\n', code[i2])
       # discard other types of raw content blocks
-      x[!i] = ''
+      x[!(i1 | i2)] = ''
       x
     })
     # commonmark doesn't support ```{.class}, which should be treated as ```class
     ret = gsub('(<pre><code class="language-)\\{[.]([^}]+)}(">)', '\\1\\2\\3', ret)
-    if (isTRUE(options[['toc']])) ret = paste(
-      c(build_toc(ret, options[['toc_depth']]), ret), collapse = '\n'
-    )
-    if (isTRUE(options[['base64_images']])) ret = xfun::in_dir(
-      if (is_file(file, TRUE)) dirname(file) else '.', .b64EncodeImages(ret)
-    )
+    # auto identifiers
+    if (isTRUE(options[['auto_identifiers']])) ret = auto_identifier(ret)
+    # number sections
+    if (isTRUE(options[['number_sections']])) ret = number_sections(ret)
+    # build table of contents
+    ret = add_toc(ret, options)
   } else if (format == 'latex') {
+    ret = render_footnotes(ret)  # render [^n] footnotes
     if (has_math) {
       m = gregexpr(sprintf('!%s-(\\d+)-%s!', id, id), ret)
       regmatches(ret, m) = lapply(regmatches(ret, m), function(x) {
@@ -263,7 +245,7 @@ mark = function(
     ret = match_replace(ret, r4, function(x) {
       info = gsub(r4, '\\2', x)
       info = gsub('^\\{|}$', '', info)
-      i = info == '=latex'
+      i = info %in% c('=latex', '=tex')
       x[i] = gsub(r4, '\\3', x[i])  # restore raw ```{=latex} content
       i = !i & grepl('^=', info)
       x[i] = ''  # discard other raw content
@@ -274,6 +256,7 @@ mark = function(
     # fix horizontal rules from --- (\linethickness doesn't work)
     ret = gsub('{\\linethickness}', '{1pt}', ret, fixed = TRUE)
     ret = redefine_level(ret, options[['top_level']])
+    if (isTRUE(options[['toc']])) ret = paste0('\\tableofcontents\n', ret)
   }
 
   meta$body = ret
@@ -281,9 +264,18 @@ mark = function(
   for (i in c('title', 'author', 'date')) meta[[i]] = render(meta[[i]], clean = TRUE)
   # use the template (if provided) to create a standalone document
   ret = build_output(format, options, template, meta)
-  # remove \title and \maketitle if title is empty
-  if (format == 'latex' && grepl('\n\\title{}\n', ret, fixed = TRUE))
-    ret = gsub('\n(\\\\title\\{}|\\\\maketitle)\n', '\n', ret)
+
+  if (format == 'html') {
+    ret = xfun::in_dir(
+      if (is_file(file, TRUE)) dirname(file) else '.',
+      embed_resources(ret, options[['embed_resources']])
+    )
+    ret = clean_html(ret)
+  } else if (format == 'latex') {
+    # remove \title and \maketitle if title is empty
+    if (grepl('\n\\title{}\n', ret, fixed = TRUE))
+      ret = gsub('\n(\\\\title\\{}|\\\\maketitle)\n', '\n', ret)
+  }
 
   if (is.character(output)) xfun::write_utf8(ret, output) else ret
 }
@@ -293,23 +285,19 @@ mark = function(
 #' @export
 #' @examples
 #'
-#' mark_html('Hello _World_!', options = '-standalone')
+#' mark_html('Hello _World_!', template = FALSE)
 #' # write HTML to an output file
 #' mark_html('_Hello_, **World**!', output = tempfile())
 mark_html = function(..., template = TRUE) {
-  # TODO: remove these special treatments to arguments after PRs
-  # https://github.com/ajrgodfrey/BrailleR/pull/89 and
-  # https://github.com/renozao/pkgmaker/pull/6 are merged
+  # TODO: remove these special treatments to arguments
+  # https://github.com/ajrgodfrey/BrailleR/pull/89
   args = list(...)
-  if (isTRUE(args$fragment.only)) {
-    template = FALSE
-    args$fragment.only = NULL
-  }
-  if ('stylesheet' %in% names(args)) {
+  if ('stylesheet' %in% names(args) && 'BrailleR' %in% loadedNamespaces()) {
     args$meta = list(css = args$stylesheet)
     args$stylesheet = NULL
+    return(do.call(mark, c(args, list(format = 'html', template = template))))
   }
-  do.call(mark, c(args, list(format = 'html', template = template)))
+  mark(..., format = 'html', template = template)
 }
 
 #' @export
@@ -323,9 +311,8 @@ mark_latex = function(..., template = TRUE) {
 
 # insert body and meta variables into a template
 build_output = function(format, options, template, meta) {
-  if (!isTRUE(options[['standalone']]) || !format %in% c('html', 'latex') ||
-      isFALSE(template)) return(meta$body)
-  if (is.null(template) || isTRUE(template)) template = get_option(
+  if (!format %in% c('html', 'latex') || isFALSE(template)) return(meta$body)
+  if (is.null(template)) template = get_option(
     sprintf('markdown.%s.template', format),
     pkg_file('resources', sprintf('markdown.%s', format))
   )
@@ -336,12 +323,10 @@ build_output = function(format, options, template, meta) {
     set_meta = function(name, value) {
       if (!name %in% names(meta)) meta[[name]] <<- value
     }
-    set_meta('title', first_header(b))
-    set_meta('css', pkg_file('resources', 'default.css'))
-    set_meta('math', if (isTRUE(options[['mathjax']]) && .requiresMathJax(b)) {
-      .mathJax(embed = isTRUE(options[['mathjax_embed']]))
-    })
-    set_meta('highlight', highlight_js(options[['highlight_code']], b))
+    set_meta('title', first_heading(b))
+    set_meta('css', 'default')
+    meta = set_math(meta, options, b)
+    meta = set_highlight(meta, options, b)
     # special handling for css/js "files" that have no extensions
     for (i in c('css', 'js')) meta[[i]] = resolve_files(meta[[i]], i)
     tpl = tpl_html(tpl)
@@ -361,7 +346,6 @@ tpl_html = function(x) {
   x = sub_var(x, '#!markdown_css#', '$css$')
   x = sub_var(x, '#!header#', '$header-includes$')
   x = sub_var(x, '#!title#', '$title$')
-  x = sub_var(x, '#!mathjax#', '$math$')
   x = sub_var(x, '#!r_highlight#', '$highlight$')
   x = sub_var(x, '#!html_output#', '$body$')
   x
@@ -369,77 +353,27 @@ tpl_html = function(x) {
 
 #' Markdown rendering options
 #'
-#' A list of all available options to control Markdown rendering. Options that
-#' are enabled by default are marked by a \code{+} prefix, and those disabled by
-#' default are marked by \code{-}.
+#' A list of all options to control Markdown rendering. Options that are enabled
+#' by default are marked by a \code{+} prefix, and those disabled by default are
+#' marked by \code{-}.
 #'
-#' Description of all options:
-#'
-#' \describe{
-#'
-#' \item{\code{base64_images}}{Embed local images in the HTML output with base64
-#' encoding.}
-#'
-#' \item{\code{highlight_code}}{Includes JavaScript libraries to syntax
-#' highlight code blocks.}
-#'
-#' \item{\code{latex_math}}{Identify LaTeX math expressions in pairs of single
-#' or double dollar signs, and transform them so that they could be correctly
-#' rendered by MathJax (HTML output) or LaTeX.}
-#'
-#' \item{\code{mathjax}}{Include MathJax library in HTML output.}
-#'
-#' \item{\code{mathjax_embed}}{Whether to download and embed the MathJax library
-#' in HTML output.}
-#'
-#' \item{\code{smartypants}}{Translate certain ASCII strings into smart
-#' typographic characters (see \code{\link{smartypants}()}.}
-#'
-#' \item{\code{standalone}}{Generate a full (HTML/LaTeX) document or only a
-#' fragment of the body.}
-#'
-#' \item{\code{superscript}}{Translate strings between two carets into
-#' superscripts, e.g., \verb{text^foo^} to \verb{text<sup>foo</sup>}.}
-#'
-#' \item{\code{subscript}}{Translate strings between two tildes into subscripts,
-#' e.g., \verb{text~foo~} to \verb{text<sub>foo</sub>}.}
-#'
-#' \item{\code{toc}}{Generate a table of contents from section headers.}
-#'
-#' \item{\code{toc_depth}}{The number of section levels to include in the table
-#' of contents (\code{3} by default).}
-#'
-#' \item{\code{top_level}}{The desired type of the top-level headings in LaTeX
-#' output. Possible values are \code{'chapter'} and \code{'part'}. For example,
-#' if \code{top_level = 'chapter'}, \code{# header} will be rendered to
-#' \verb{\chapter{header}} instead of the default \verb{\section{header}}.}
-#'
-#' }
-#'
-#' Options not described above can be found on the help pages of
-#' \pkg{commonmark}, e.g., the \code{hardbreaks} option is for the
-#' \code{hardbreaks} argument of
-#' \code{\link[commonmark:commonmark]{markdown_*}()} functions, and the
-#' \code{table} option is for the \code{table} extension in \pkg{commonmark}'s
-#' extensions (\code{commonmark::\link[commonmark]{list_extensions}()}).
+#' See \code{vignette('intro', package = 'markdown')} for the full list of
+#' options and their documentation.
 #' @return A character vector of all available options.
 #' @export
 #' @examples
-#' # List all available options
+#' # all available options
 #' markdown::markdown_options()
-#'
-#' # Turn on/off some options globally for HTML output
-#' options(markdown.html.options = '+toc-smartypants-standalone')
 #'
 #' @example inst/examples/render-options.R
 markdown_options = function() {
   # options enabled by default
   x1 = c(
-    'smart', 'smartypants', 'base64_images', 'mathjax', 'highlight_code',
-    'superscript', 'subscript', 'latex_math', 'standalone',
+    'smart', 'smartypants', 'embed_resources', 'js_math', 'js_highlight',
+    'superscript', 'subscript', 'latex_math', if (!check_old()) 'auto_identifiers',
     setdiff(commonmark::list_extensions(), 'tagfilter')
   )
   # options disabled by default
-  x2 = c('toc', 'hardbreaks', 'tagfilter', 'mathjax_embed')
+  x2 = c('toc', 'hardbreaks', 'tagfilter', 'number_sections')
   sort(c(paste0('+', x1), paste0('-', x2)))
 }
