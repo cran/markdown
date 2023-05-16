@@ -1,8 +1,8 @@
 #' Convert some ASCII strings to HTML entities
 #'
-#' Transform ASCII strings \verb{(c)} (copyright), \verb{(r)} (registered
-#' trademark), \verb{(tm)} (trademark), and fractions \verb{n/m} into
-#' \emph{smart} typographic HTML entities.
+#' Transform ASCII strings `(c)` (copyright), `(r)` (registered trademark),
+#' `(tm)` (trademark), and fractions `n/m` into *smart* typographic HTML
+#' entities.
 #' @param text A character vector of the Markdown text.
 #' @return A character vector of the transformed text.
 #' @export
@@ -12,7 +12,7 @@ smartypants = function(text) {
   text = xfun::split_lines(text)
   i = xfun::prose_index(text)
   r = '(?<!`)\\((c|r|tm)\\)|(\\d+/\\d+)(?!`)'
-  text[i] = match_replace(text[i], r, perl = TRUE, function(z) {
+  text[i] = match_replace(text[i], r, function(z) {
     y = pants[z]
     i = is.na(y)
     y[i] = z[i]
@@ -62,19 +62,17 @@ id_string = function(text, lens = c(2:10, 20), times = 20) {
 }
 
 # a shorthand for gregexpr() and regmatches()
-match_replace = function(x, pattern, replace = identity, ...) {
-  m = gregexpr(pattern, x, ...)
+match_replace = function(x, pattern, replace = identity, ..., perl = TRUE) {
+  m = gregexpr(pattern, x, ..., perl = perl)
   regmatches(x, m) = lapply(regmatches(x, m), function(z) {
     if (length(z)) replace(z) else z
   })
   x
 }
 
-# *guess* if an input is a file: if ext = TRUE, avoid guessing by file extension
-is_file = function(x, ext = FALSE) {
-  length(x) == 1 && !inherits(x, 'AsIs') && nchar(x) < 1000 && !grepl('\n', x) && (
-    xfun::file_exists(x) || (!ext && xfun::file_ext(x) != '')
-  )
+# test if an input is a file path; if shouldn't be treated as file, use I()
+is_file = function(x) {
+  length(x) == 1 && !inherits(x, 'AsIs') && xfun::file_exists(x)
 }
 
 # substitute a variable in template `x` with its value; the variable may have
@@ -315,7 +313,7 @@ get_option = function(name, default = NULL) {
 # if a string is a file path, read the file; then concatenate elements by \n
 one_string = function(x) {
   if (!is.character(x)) return('')
-  if (is_file(x, TRUE)) x = xfun::read_utf8(x)
+  if (is_file(x)) x = xfun::read_utf8(x)
   paste(x, collapse = '\n')
 }
 
@@ -431,7 +429,7 @@ move_attrs = function(x, format = 'html') {
 
 convert_attrs = function(x, r, s, f, format = 'html') {
   r2 = '(?<=^| )[.#]([[:alnum:]-]+)(?= |$)'
-  match_replace(x, r, perl = TRUE, function(y) {
+  match_replace(x, r, function(y) {
     if (format == 'html') {
       z = gsub('[\U201c\U201d]', '"', y)
     } else {
@@ -441,7 +439,7 @@ convert_attrs = function(x, r, s, f, format = 'html') {
     }
     z2 = sub(r, s, z)
     # convert #id to id="" and .class to class=""
-    z2 = match_replace(z2, r2, perl = TRUE, function(a) {
+    z2 = match_replace(z2, r2, function(a) {
       i = grep('^[.]', a)
       if ((n <- length(i))) {
         # merge multiple classes into one class attribute
@@ -480,7 +478,7 @@ render_footnotes = function(x) {
     f1 <<- c(f1, sub(r, '\\2', z))
     f2 <<- c(f2, sub(r, '\\3', z))
     gsub(r, '\\1', z)
-  })
+  }, perl = FALSE)
   for (i in seq_along(f1)) {
     x = sub(f1[i], sprintf('\\footnote{%s}', f2[i]), x, fixed = TRUE)
   }
@@ -490,7 +488,7 @@ render_footnotes = function(x) {
 # add auto identifiers to headings
 auto_identifier = function(x) {
   r = '<(h[1-6])([^>]*)>(.+?)</\\1>'
-  match_replace(x, r, perl = TRUE, function(z) {
+  match_replace(x, r, function(z) {
     z1 = sub(r, '\\1', z)  # tag
     z2 = sub(r, '\\2', z)  # attrs
     z3 = sub(r, '\\3', z)  # content
@@ -524,7 +522,7 @@ number_sections = function(x) {
   has_class = function(x, class) {
     grepl(sprintf(' class="([^"]+ )?%s( [^"]+)?"', class), x)
   }
-  match_replace(x, r, perl = TRUE, function(z) {
+  match_replace(x, r, function(z) {
     z1 = as.integer(sub(r, '\\1', z, perl = TRUE))
     z2 = sub(r, '\\2', z, perl = TRUE)
     num_sections = identity  # generate appendix numbers
@@ -614,7 +612,7 @@ embed_resources = function(x, embed = 'local') {
     x = if (length(grep('</body>', x)) != 1) {
       one_string(I(c(x, x2)))
     } else {
-      match_replace(x, '</body>', fixed = TRUE, function(z) {
+      match_replace(x, '</body>', fixed = TRUE, perl = FALSE, function(z) {
         one_string(I(c(x2, z)))
       })
     }
@@ -789,7 +787,7 @@ base64_url = function(url, code, ext) {
       code, '(?<=src:\'url\\(")(%%URL%%/[^"]+)(?="\\))', function(u) {
         u = sub('%%URL%%', paste(d, p, sep = '/'), u, fixed = TRUE)
         unlist(lapply(u, function(x) xfun::download_cache$get(x, 'base64')))
-      }, perl = TRUE
+      }
     ) else warning(
       'Unable to determine the font path in MathJax. Please report an issue to ',
       'https://github.com/rstudio/markdown/issues and mention the URL ', url, '.'
@@ -808,7 +806,7 @@ base64_url = function(url, code, ext) {
         if (is_https(x)) xfun::download_cache$get(x, 'base64') else xfun::base64_uri(x)
       }))
       paste0(z1, z2, z3)
-    }, perl = TRUE)
+    })
   }
   code
 }
