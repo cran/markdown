@@ -1,3 +1,7 @@
+# CHANGES IN markdown VERSION 1.8
+
+- Fixed the superfluous warning about path lengths in `mark_html()` (thanks, @kenjisato, #103).
+
 # CHANGES IN markdown VERSION 1.7
 
 - The `file` argument of `mark()` will be treated as a file path only if the file exists and the value is not wrapped in `I()`. Previously, it would be treated as a file path when it has a file extension, which could lead to confusing errors like #100 (thanks, @LukasWallrich).
