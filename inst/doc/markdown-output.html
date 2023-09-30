@@ -277,6 +277,27 @@ cat(mark(&quot;2^10^&quot;))
 <pre><code class="language-r">cat(mark(&quot;H~2~O&quot;, options = &quot;-subscript&quot;))
 </code></pre>
 <p>H<sub>2</sub>O</p>
+<pre><code class="language-r"># code blocks
+cat(mark('```r\n1 + 1;\n```'))
+</code></pre>
+<pre><code class="language-r">1 + 1;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r}\n1 + 1;\n```'))
+</code></pre>
+<pre><code class="language-r">1 + 1;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js}\n1 + 1;\n```'))
+</code></pre>
+<pre><code class="language-r js">1 + 1;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js #foo}\n1 + 1;\n```'))
+</code></pre>
+<pre><code class="language-r js" id="foo">1 + 1;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js #foo style=&quot;color:red;&quot;}\n1 + 1;\n```'))
+</code></pre>
+<pre><code class="language-r js" id="foo" style="color:red;">1 + 1;
+</code></pre>
 <pre><code class="language-r"># skip_html tags
 mkd = '&lt;style&gt;a {}&lt;/style&gt;&lt;script type=&quot;text/javascript&quot;&gt;console.log(&quot;No!&quot;);&lt;/script&gt;\n[Hello](#)'
 cat(mark(mkd))

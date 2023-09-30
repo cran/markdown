@@ -181,9 +181,9 @@ elements in footnotes and not necessarily one paragraph.
 
 #### Attributes
 
-Attributes on images and section headings can be written in `{}`. For example,
-`![text](path){.foo #bar width="50%"}` will generate an `<img>` tag with
-attributes in HTML output:
+Attributes on images, fenced code blocks, and section headings can be written in
+`{}`. For example, `![text](path){.foo #bar width="50%"}` will generate an
+`<img>` tag with attributes in HTML output:
 
 ``` html
 <img src="path" alt="text" id="bar" class="foo" width="50%" />
@@ -193,6 +193,25 @@ and `## Heading {#baz}` will generate:
 
 ``` html
 <h2 id="baz">Heading</h2>
+```
+
+For fenced code blocks, a special rule is that the first class name will be
+treated as the language name for a block, and the `class` attribute of the
+result `<code>` tag will have a `language-` prefix. For example, the following
+code block
+
+```` markdown
+```{.foo .bar #my-code style="color: red;"}
+```
+````
+
+will generate the HTML output below:
+
+``` html
+<pre>
+  <code class="language-foo bar" id="my-code" style="color: red;">
+  </code>
+</pre>
 ```
 
 Most attributes in `{}` are ignored for LaTeX output except for:
@@ -295,9 +314,9 @@ As mentioned earlier, a lot of features in Pandoc's Markdown are not supported
 in the **markdown** package. Any feature that you find missing in previous
 sections is likely to be unavailable, such as citations and figure/table
 captions. In addition, a lot of R Markdown and Quarto (both are based on Pandoc)
-features are not supported, either, e.g., tabbed sections, code folding, and
-HTML widgets. Some HTML features may be implemented via JavaScript, but
-currently it is not straightforward and may be improved in future.
+features are not supported, either, e.g., tabbed sections and code folding. Some
+HTML features may be implemented via JavaScript, but currently it is not
+straightforward and may be improved in future.
 
 Pandoc can convert Markdown to many output formats, such as Word, PowerPoint,
 LaTeX beamer, and EPUB. The **markdown** package is unlikely to support output

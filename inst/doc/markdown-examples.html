@@ -293,6 +293,32 @@ cat(mark(&quot;2^10^&quot;))
 </code></pre>
 <pre><code>&lt;p&gt;H~2~O&lt;/p&gt;
 </code></pre>
+<pre><code class="language-r"># code blocks
+cat(mark('```r\n1 + 1;\n```'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code class=&quot;language-r&quot;&gt;1 + 1;
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r}\n1 + 1;\n```'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code class=&quot;language-r&quot;&gt;1 + 1;
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js}\n1 + 1;\n```'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code class=&quot;language-r js&quot;&gt;1 + 1;
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js #foo}\n1 + 1;\n```'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code class=&quot;language-r js&quot; id=&quot;foo&quot;&gt;1 + 1;
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{.r .js #foo style=&quot;color:red;&quot;}\n1 + 1;\n```'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code class=&quot;language-r js&quot; id=&quot;foo&quot; style=&quot;color:red;&quot;&gt;1 + 1;
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
 <pre><code class="language-r"># skip_html tags
 mkd = '&lt;style&gt;a {}&lt;/style&gt;&lt;script type=&quot;text/javascript&quot;&gt;console.log(&quot;No!&quot;);&lt;/script&gt;\n[Hello](#)'
 cat(mark(mkd))

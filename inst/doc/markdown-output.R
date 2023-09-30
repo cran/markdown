@@ -1,4 +1,4 @@
-## ---- markdown-output, results='asis', tidy=FALSE, file=markdown:::pkg_file('examples', 'render-options.R')----
+## ----markdown-output, results='asis', tidy=FALSE, file=markdown:::pkg_file('examples', 'render-options.R')----
 library(markdown)
 
 # toc example
@@ -53,13 +53,20 @@ cat(mark("2^10^", options = "-superscript"))
 cat(mark("H~2~O"))
 cat(mark("H~2~O", options = "-subscript"))
 
+# code blocks
+cat(mark('```r\n1 + 1;\n```'))
+cat(mark('```{.r}\n1 + 1;\n```'))
+cat(mark('```{.r .js}\n1 + 1;\n```'))
+cat(mark('```{.r .js #foo}\n1 + 1;\n```'))
+cat(mark('```{.r .js #foo style="color:red;"}\n1 + 1;\n```'))
+
 # skip_html tags
 mkd = '<style>a {}</style><script type="text/javascript">console.log("No!");</script>\n[Hello](#)'
 cat(mark(mkd))
 # TODO: wait for https://github.com/r-lib/commonmark/issues/15 to be fixed
 # cat(mark(mkd, options = "tagfilter"))
 
-## ---- smartypants, results='asis', eval=isTRUE(l10n_info()[['UTF-8']])--------
+## ----smartypants, results='asis', eval=isTRUE(l10n_info()[['UTF-8']])---------
 # smartypants example
 cat(mark("1/2 (c)"))
 

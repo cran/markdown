@@ -145,7 +145,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <div class="frontmatter">
 <div class="title"><h1>An Introduction to the markdown Package</h1></div>
 <div class="author"><h2>Yihui Xie</h2></div>
-<div class="date"><h3>2023-08-22</h3></div>
+<div class="date"><h3>2023-09-29</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -211,12 +211,12 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </li>
 </ul>
 </div>
-<!--
+<pre><code class="language-"=html>&lt;!--
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{An Introduction to the markdown Package}
 %\VignetteEncoding{UTF-8}
--->
-<style type="text/css">
+--&gt;
+&lt;style type=&quot;text/css&quot;&gt;
 #TOC {
   float: right;
   border-left: 1px dashed;
@@ -225,7 +225,8 @@ table, .body h2 { border-bottom: 1px solid #666; }
   background: ghostwhite;
 }
 #TOC ul { margin: 0; }
-</style>
+&lt;/style&gt;
+</code></pre>
 <p>The <strong>markdown</strong> package is built on top of <strong>commonmark</strong>. It renders Markdown
 to output formats supported by <strong>commonmark</strong>, and the primary output formats
 are HTML and LaTeX.</p>
@@ -275,7 +276,7 @@ following features.</p>
 <h4 id="raw-latex-html-blocks"><span class="section-number">1.2.1</span> Raw LaTeX/HTML blocks</h4>
 <p>Raw LaTeX and HTML blocks can be written as fenced code blocks with language
 names <code>=latex</code> (or <code>=tex</code>) and <code>=html</code>, e.g.,</p>
-<pre><code class="language-markdown">```{=tex}
+<pre><code class="language-markdown">```{=tex
 This only appears in \LaTeX{} output.
 ```
 </code></pre>
@@ -290,8 +291,7 @@ for HTML output (see the next section).</p>
 <p>$$|x| = \begin{cases} x &amp;\text{if } x \geq 0 \\ -x &amp;\text{if } x &lt; 0 \end{cases}$$</p>
 <p>LaTeX math environments are also supported, e.g., below are an <code>align</code>
 environment and an <code>equation</code> environment:</p>
-<p>
-\begin{align}
+<pre><code class="language-"=latex>\begin{align}
 a^{2}+b^{2} &amp; =  c^{2}\\
 \sin^{2}(\theta)+\cos^{2}(\theta) &amp; =  1
 \end{align}
@@ -302,10 +302,10 @@ a^{2}+b^{2} &amp; =  c^{2}\\
   &amp;=a^2+2ab+b^2
 \end{split}
 \end{equation}
-</p>
+</code></pre>
 <p>These math environments can be written in raw LaTeX blocks, and they work for
 both LaTeX and HTML output, e.g.,</p>
-<pre><code class="language-markdown">```{=latex}
+<pre><code class="language-markdown">```{=latex
 \begin{align}
 a^{2}+b^{2} &amp; =  c^{2}\\
 \sin^{2}(\theta)+\cos^{2}(\theta) &amp; =  1
@@ -344,13 +344,26 @@ identifiers are not recognized.</p>
 <p>The two limitations do not apply to HTML output, e.g., you can write arbitrary
 elements in footnotes and not necessarily one paragraph.</p>
 <h4 id="attributes"><span class="section-number">1.2.5</span> Attributes</h4>
-<p>Attributes on images and section headings can be written in <code>{}</code>. For example,
-<code>![text](path){.foo #bar width=&quot;50%&quot;}</code> will generate an <code>&lt;img&gt;</code> tag with
-attributes in HTML output:</p>
+<p>Attributes on images, fenced code blocks, and section headings can be written in
+<code>{}</code>. For example, <code>![text](path){.foo #bar width=&quot;50%&quot;}</code> will generate an
+<code>&lt;img&gt;</code> tag with attributes in HTML output:</p>
 <pre><code class="language-html">&lt;img src=&quot;path&quot; alt=&quot;text&quot; id=&quot;bar&quot; class=&quot;foo&quot; width=&quot;50%&quot; /&gt;
 </code></pre>
 <p>and <code>## Heading {#baz}</code> will generate:</p>
 <pre><code class="language-html">&lt;h2 id=&quot;baz&quot;&gt;Heading&lt;/h2&gt;
+</code></pre>
+<p>For fenced code blocks, a special rule is that the first class name will be
+treated as the language name for a block, and the <code>class</code> attribute of the
+result <code>&lt;code&gt;</code> tag will have a <code>language-</code> prefix. For example, the following
+code block</p>
+<pre><code class="language-markdown">```{.fooeY.bareY#my-codeeYstyle=&quot;color:eYred;&quot;
+```
+</code></pre>
+<p>will generate the HTML output below:</p>
+<pre><code class="language-html">&lt;pre&gt;
+  &lt;code class=&quot;language-foo bar&quot; id=&quot;my-code&quot; style=&quot;color: red;&quot;&gt;
+  &lt;/code&gt;
+&lt;/pre&gt;
 </code></pre>
 <p>Most attributes in <code>{}</code> are ignored for LaTeX output except for:</p>
 <ul>
@@ -456,9 +469,9 @@ write fractions in the form <code>n/m</code>. Below are some example entities:</
 in the <strong>markdown</strong> package. Any feature that you find missing in previous
 sections is likely to be unavailable, such as citations and figure/table
 captions. In addition, a lot of R Markdown and Quarto (both are based on Pandoc)
-features are not supported, either, e.g., tabbed sections, code folding, and
-HTML widgets. Some HTML features may be implemented via JavaScript, but
-currently it is not straightforward and may be improved in future.</p>
+features are not supported, either, e.g., tabbed sections and code folding. Some
+HTML features may be implemented via JavaScript, but currently it is not
+straightforward and may be improved in future.</p>
 <p>Pandoc can convert Markdown to many output formats, such as Word, PowerPoint,
 LaTeX beamer, and EPUB. The <strong>markdown</strong> package is unlikely to support output
 formats beyond HTML and LaTeX.</p>

@@ -1,3 +1,6 @@
+# use PCRE by default (which seems to handle multibyte chars better)
+gregexpr = function(..., perl = TRUE) base::gregexpr(..., perl = perl)
+
 #' Convert some ASCII strings to HTML entities
 #'
 #' Transform ASCII strings `(c)` (copyright), `(r)` (registered trademark),
@@ -62,8 +65,8 @@ id_string = function(text, lens = c(2:10, 20), times = 20) {
 }
 
 # a shorthand for gregexpr() and regmatches()
-match_replace = function(x, pattern, replace = identity, ..., perl = TRUE) {
-  m = gregexpr(pattern, x, ..., perl = perl)
+match_replace = function(x, pattern, replace = identity, ...) {
+  m = gregexpr(pattern, x, ...)
   regmatches(x, m) = lapply(regmatches(x, m), function(z) {
     if (length(z)) replace(z) else z
   })
@@ -197,7 +200,7 @@ set_highlight = function(meta, options, html) {
   autoloader = 'plugins/autoloader/prism-autoloader.min.js'
   o$js = c(o$js, if (!is.null(l <- o$languages)) get_lang(l) else {
     # detect <code> languages in html and load necessary language components
-    lang = unique(unlist(regmatches(html, gregexpr(r, html, perl = TRUE))))
+    lang = unique(unlist(regmatches(html, gregexpr(r, html))))
     f = switch(p, highlight = js_libs[[c(p, 'js')]], prism = autoloader)
     if (!embed && p == 'prism') f else {
       get_lang(lang_files(p, get_path(f), lang))
@@ -233,7 +236,7 @@ lang_files = function(package, path, langs) {
     x = grep(r, x, value = TRUE)
     l = gsub(r, '\\1', x)
     # then find their aliases
-    m = gregexpr('(?<=aliases:\\[)[^]]+(?=\\])', x, perl = TRUE)
+    m = gregexpr('(?<=aliases:\\[)[^]]+(?=\\])', x)
     a = lapply(regmatches(x, m), function(z) {
       z = unlist(strsplit(z, '[",]'))
       z[!xfun::is_blank(z)]
@@ -251,7 +254,7 @@ lang_files = function(package, path, langs) {
     l1
   } else {
     # dependencies and aliases (the arrays should be more than 1000 characters)
-    m = gregexpr('(?<=\\{)([[:alnum:]_-]+:\\[?"[^}]{1000,})(?=\\})', x, perl = TRUE)
+    m = gregexpr('(?<=\\{)([[:alnum:]_-]+:\\[?"[^}]{1000,})(?=\\})', x)
     x = unlist(regmatches(x, m))
     if (length(x) < 2) {
       warning(
@@ -262,7 +265,7 @@ lang_files = function(package, path, langs) {
       return()
     }
     x = x[1:2]
-    m = gregexpr('([[:alnum:]_-]+):(\\["[^]]+\\]|"[^"]+")', x, perl = TRUE)
+    m = gregexpr('([[:alnum:]_-]+):(\\["[^]]+\\]|"[^"]+")', x)
     x = lapply(regmatches(x, m), function(z) {
       z = gsub('[]["]', '', z)
       unlist(lapply(strsplit(z, '[:,]'), function(y) {
@@ -322,7 +325,7 @@ build_toc = function(html, n = 3) {
   if (n <= 0) return()
   if (n > 6) n = 6
   r = sprintf('<(h[1-%d])( id="[^"]+")?[^>]*>(.+?)</\\1>', n)
-  items = unlist(regmatches(html, gregexpr(r, html, perl = TRUE)))
+  items = unlist(regmatches(html, gregexpr(r, html)))
   if (length(items) == 0) return()
   x = gsub(r, '<toc\\2>\\3</toc>', items)  # use a tag <toc> to protect heading text
   h = as.integer(gsub('^h', '', gsub(r, '\\1', items)))  # heading level
@@ -427,7 +430,7 @@ move_attrs = function(x, format = 'html') {
   x
 }
 
-convert_attrs = function(x, r, s, f, format = 'html') {
+convert_attrs = function(x, r, s, f, format = 'html', f2 = identity) {
   r2 = '(?<=^| )[.#]([[:alnum:]-]+)(?= |$)'
   match_replace(x, r, function(y) {
     if (format == 'html') {
@@ -437,7 +440,7 @@ convert_attrs = function(x, r, s, f, format = 'html') {
       z = gsub("''( |\\\\})", '"\\1', z)
       z = gsub('\\\\([#%])', '\\1', z)
     }
-    z2 = sub(r, s, z)
+    z2 = f2(sub(r, s, z))
     # convert #id to id="" and .class to class=""
     z2 = match_replace(z2, r2, function(a) {
       i = grep('^[.]', a)
@@ -812,6 +815,32 @@ base64_url = function(url, code, ext) {
   code
 }
 
+# resolve HTML dependencies and write out the appropriate HTML code to `header-includes`
+add_html_deps = function(meta, output, embed = TRUE) {
+  if (!xfun::loadable('knitr')) return(meta)
+  deps = c(knitr::knit_meta(), .env$knit_meta)
+  if (length(deps) == 0 || !any(vapply(deps, inherits, logical(1), 'html_dependency'))) return(meta)
+  if (!xfun::loadable('rmarkdown')) stop(
+    'It seems the document contains HTML dependencies, which require ',
+    'the rmarkdown package but it is not available.'
+  )
+  deps = rmarkdown:::flatten_html_dependencies(deps)
+  deps = rmarkdown:::html_dependency_resolver(deps)
+  if (length(deps) == 0) return(meta)
+  d1 = d2 = NULL
+  # if resources need to be embedded, use their absolute paths; otherwise copy
+  # dependencies to 'libs/' and use relative paths
+  if (!embed) {
+    if (is.character(output)) {
+      owd = setwd(dirname(output)); on.exit(setwd(owd), add = TRUE)
+    }
+    d1 = 'libs'; d2 = '.'
+  }
+  deps = rmarkdown:::html_dependencies_as_string(deps, d1, d2)
+  meta[['header-includes']] = paste(deps, one_string(meta[['header-includes']]), sep = '\n')
+  meta
+}
+
 # compact HTML code
 clean_html = function(x) {
   # TODO: remove this hack (https://github.com/rstudio/plumbertableau/pull/84)
@@ -824,6 +853,3 @@ clean_html = function(x) {
 check_old = function() {
   xfun::check_old_package('plumbertableau', '0.1.0')
 }
-
-# TODO: remove this after new release of https://github.com/rstudio/leaflet
-.b64EncodeFile = function(...) xfun::base64_uri(...)
