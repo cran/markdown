@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -145,7 +145,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <div class="frontmatter">
 <div class="title"><h1>An Introduction to the markdown Package</h1></div>
 <div class="author"><h2>Yihui Xie</h2></div>
-<div class="date"><h3>2023-09-29</h3></div>
+<div class="date"><h3>2023-10-09</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -211,12 +211,12 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </li>
 </ul>
 </div>
-<pre><code class="language-"=html>&lt;!--
+<!--
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{An Introduction to the markdown Package}
 %\VignetteEncoding{UTF-8}
---&gt;
-&lt;style type=&quot;text/css&quot;&gt;
+-->
+<style type="text/css">
 #TOC {
   float: right;
   border-left: 1px dashed;
@@ -225,8 +225,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
   background: ghostwhite;
 }
 #TOC ul { margin: 0; }
-&lt;/style&gt;
-</code></pre>
+</style>
 <p>The <strong>markdown</strong> package is built on top of <strong>commonmark</strong>. It renders Markdown
 to output formats supported by <strong>commonmark</strong>, and the primary output formats
 are HTML and LaTeX.</p>
@@ -234,7 +233,7 @@ are HTML and LaTeX.</p>
 replaced by <strong>commonmark</strong> since v1.3 (2022-10-30). The main advantage of the
 latter is that it follows a clear and widely used spec, i.e., GFM (<a href="https://github.github.com/gfm/">GitHub
 Flavored Markdown</a>), which can be seen as a
-subset of <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s Markdown</a>.
+subset of Pandoc’s Markdown.
 Therefore the <strong>markdown</strong> package can be viewed as a small subset of the
 <strong>rmarkdown</strong> package (the latter is based on Pandoc but the former doesn’t
 depend on external tools). It aims at simplicity, lightweight, and speed, at the
@@ -276,7 +275,7 @@ following features.</p>
 <h4 id="raw-latex-html-blocks"><span class="section-number">1.2.1</span> Raw LaTeX/HTML blocks</h4>
 <p>Raw LaTeX and HTML blocks can be written as fenced code blocks with language
 names <code>=latex</code> (or <code>=tex</code>) and <code>=html</code>, e.g.,</p>
-<pre><code class="language-markdown">```{=tex
+<pre><code class="language-markdown">```{=tex}
 This only appears in \LaTeX{} output.
 ```
 </code></pre>
@@ -291,7 +290,8 @@ for HTML output (see the next section).</p>
 <p>$$|x| = \begin{cases} x &amp;\text{if } x \geq 0 \\ -x &amp;\text{if } x &lt; 0 \end{cases}$$</p>
 <p>LaTeX math environments are also supported, e.g., below are an <code>align</code>
 environment and an <code>equation</code> environment:</p>
-<pre><code class="language-"=latex>\begin{align}
+<p>
+\begin{align}
 a^{2}+b^{2} &amp; =  c^{2}\\
 \sin^{2}(\theta)+\cos^{2}(\theta) &amp; =  1
 \end{align}
@@ -302,10 +302,10 @@ a^{2}+b^{2} &amp; =  c^{2}\\
   &amp;=a^2+2ab+b^2
 \end{split}
 \end{equation}
-</code></pre>
+</p>
 <p>These math environments can be written in raw LaTeX blocks, and they work for
 both LaTeX and HTML output, e.g.,</p>
-<pre><code class="language-markdown">```{=latex
+<pre><code class="language-markdown">```{=latex}
 \begin{align}
 a^{2}+b^{2} &amp; =  c^{2}\\
 \sin^{2}(\theta)+\cos^{2}(\theta) &amp; =  1
@@ -356,7 +356,7 @@ elements in footnotes and not necessarily one paragraph.</p>
 treated as the language name for a block, and the <code>class</code> attribute of the
 result <code>&lt;code&gt;</code> tag will have a <code>language-</code> prefix. For example, the following
 code block</p>
-<pre><code class="language-markdown">```{.fooeY.bareY#my-codeeYstyle=&quot;color:eYred;&quot;
+<pre><code class="language-markdown">```{.foo2w.bar2w#my-code2wstyle=&quot;color:2wred;&quot;}
 ```
 </code></pre>
 <p>will generate the HTML output below:</p>

@@ -40,7 +40,7 @@ Historically, it uses a C library named **sundown**, which has been deleted and
 replaced by **commonmark** since v1.3 (2022-10-30). The main advantage of the
 latter is that it follows a clear and widely used spec, i.e., GFM ([GitHub
 Flavored Markdown](https://github.github.com/gfm/)), which can be seen as a
-subset of [Pandoc's Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
+subset of Pandoc's Markdown.
 Therefore the **markdown** package can be viewed as a small subset of the
 **rmarkdown** package (the latter is based on Pandoc but the former doesn't
 depend on external tools). It aims at simplicity, lightweight, and speed, at the

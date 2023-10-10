@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -319,7 +319,14 @@ cat(mark('```r\n1 + 1;\n```'))
 <pre><code>&lt;pre&gt;&lt;code class=&quot;language-r js&quot; id=&quot;foo&quot; style=&quot;color:red;&quot;&gt;1 + 1;
 &lt;/code&gt;&lt;/pre&gt;
 </code></pre>
-<pre><code class="language-r"># skip_html tags
+<pre><code class="language-r"># raw blocks
+cat(mark('```{=html}\n&lt;p&gt;raw HTML&lt;/p&gt;\n```'))
+</code></pre>
+<pre><code>&lt;p&gt;raw HTML&lt;/p&gt;
+</code></pre>
+<pre><code class="language-r">cat(mark('```{=latex}\n&lt;p&gt;raw HTML&lt;/p&gt;\n```'))
+
+# skip_html tags
 mkd = '&lt;style&gt;a {}&lt;/style&gt;&lt;script type=&quot;text/javascript&quot;&gt;console.log(&quot;No!&quot;);&lt;/script&gt;\n[Hello](#)'
 cat(mark(mkd))
 </code></pre>

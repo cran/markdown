@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -146,7 +146,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <div class="frontmatter">
 <div class="title"><h1>Authoring HTML Articles with the markdown Package</h1></div>
 <div class="author"><h2>Yihui Xie</h2></div>
-<div class="date"><h3>2023-09-29</h3></div>
+<div class="date"><h3>2023-10-09</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -171,12 +171,11 @@ table, .body h2 { border-bottom: 1px solid #666; }
 <li><a href="#technical-notes"><span class="section-number">A.</span> Technical notes</a></li>
 </ul>
 </div>
-<pre><code class="language-"=html>&lt;!--
+<!--
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Authoring HTML Articles with the markdown Package}
 %\VignetteEncoding{UTF-8}
---&gt;
-</code></pre>
+-->
 <p>The R package <a href="https://cran.r-project.org/package=markdown"><strong>markdown</strong></a> can be
 used to generate lightweight HTML documents with minimal default CSS styles. If
 you are not familiar with this package, you may read <a href="intro.html">the
@@ -284,7 +283,7 @@ e.g.,</p>
 <p>If you use R Markdown, you can generate a wide plot or table from an R code
 chunk, e.g.,</p>
 <pre><code class="language-markdown">::: {.fullwidth}
-```{r
+```{r}
 #| sunspots, echo=FALSE, fig.dim=c(14, 4),
 #| fig.cap='Monthly mean relative sunspot numbers from 1749 to 1983.'
 par(mar = c(4, 4, .1, .1), bg = 'lightgoldenrodyellow', fg = 'red', las = 1)

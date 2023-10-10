@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -247,7 +247,7 @@ html:fullscreen {
 <div class="frontmatter">
 <div class="title"><h1>Making HTML Slides with the <strong>markdown</strong> Package</h1></div>
 <div class="author"><h2><a href="https://yihui.org">Yihui Xie</a></h2></div>
-<div class="date"><h3>2023-09-29</h3></div>
+<div class="date"><h3>2023-10-09</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -300,12 +300,11 @@ html:fullscreen {
 <li><a href="#enjoy"><span class="section-number">9.</span> Enjoy!</a></li>
 </ul>
 </div>
-<pre><code class="language-"=html>&lt;!--
+<!--
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Making HTML Slides with the markdown Package}
 %\VignetteEncoding{UTF-8}
---&gt;
-</code></pre>
+-->
 <h2 id="get-started"><span class="section-number">1.</span> Get started</h2>
 <p>Specify at least one CSS file (<code>snap.css</code>) and one JS script (<code>snap.js</code>) in YAML
 metadata:</p>
@@ -420,7 +419,7 @@ output:
 <hr />
 <p>If your input document is <code>.Rmd</code>, you can also embed CSS directly in a <code>css</code>
 code chunk:</p>
-<pre><code class="language-markdown">```{css,DJecho=FALSE
+<pre><code class="language-markdown">```{css,5eecho=FALSE}
 /* your CSS rules */
 ```
 </code></pre>
@@ -676,8 +675,7 @@ the total number of seconds in the attribute <code>data-total</code>, e.g.,</p>
 <p>The timer will start when the presentation becomes fullscreen. To restart the
 timer, click on it.</p>
 <p>For the countdown timer, when the time is up, the timer will start to blink.</p>
-<pre><code class="language-"=html>&lt;span class=&quot;timer&quot; data-total=&quot;1200&quot;&gt;&lt;/span&gt;
-</code></pre>
+<span class="timer" data-total="1200"></span>
 <hr />
 <h2 id="caveats"><span class="section-number">7.</span> Caveats</h2>
 <h3 id="lengthy-slides"><span class="section-number">7.1</span> Lengthy slides</h3>
@@ -908,9 +906,9 @@ possible application of this odd feature. <a href="#fnref-1" class="footnote-bac
     if (fn) s.querySelectorAll('.footnote-ref > a[href^="#fn"]').forEach(a => {
       const li = fn.querySelector('li' + a.getAttribute('href'));
       if (!li) return;
-      let f = s.querySelector('div.footnotes');
+      let f = s.querySelector('section.footnotes');
       if (!f) {
-        f = newEl('div', 'footnotes'); s.append(f);
+        f = newEl('section', 'footnotes'); s.append(f);
       }
       f.append(li);
       li.firstElementChild?.insertAdjacentHTML('afterbegin', `[${a.innerHTML}] `);
