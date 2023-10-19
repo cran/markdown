@@ -247,7 +247,7 @@ html:fullscreen {
 <div class="frontmatter">
 <div class="title"><h1>Making HTML Slides with the <strong>markdown</strong> Package</h1></div>
 <div class="author"><h2><a href="https://yihui.org">Yihui Xie</a></h2></div>
-<div class="date"><h3>2023-10-09</h3></div>
+<div class="date"><h3>2023-10-18</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -419,7 +419,7 @@ output:
 <hr />
 <p>If your input document is <code>.Rmd</code>, you can also embed CSS directly in a <code>css</code>
 code chunk:</p>
-<pre><code class="language-markdown">```{css,5eecho=FALSE}
+<pre><code class="language-markdown">```{css, echo=FALSE}
 /* your CSS rules */
 ```
 </code></pre>
@@ -787,7 +787,7 @@ just need to have the correct HTML structure. Then in your HTML document:</p>
 &lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/combine/gh/rstudio/markdown@VERSION/inst/resources/default.min.css,gh/rstudio/markdown@VERSION/inst/resources/snap.min.css&quot;&gt;
 </code></pre>
 <p>Remember to substitute <code>VERSION</code> with <a href="https://github.com/rstudio/markdown/tags">an appropriate
-version</a> (e.g., <code>1.6</code>). You can omit
+version</a> (e.g., <code>1.11</code>). You can omit
 <code>@VERSION</code> to use the latest version but it is not recommended because future
 updates might break your old slides.</p>
 <p>Both the JS and CSS are quite lightweight (total size is

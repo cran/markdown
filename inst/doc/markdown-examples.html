@@ -319,6 +319,13 @@ cat(mark('```r\n1 + 1;\n```'))
 <pre><code>&lt;pre&gt;&lt;code class=&quot;language-r js&quot; id=&quot;foo&quot; style=&quot;color:red;&quot;&gt;1 + 1;
 &lt;/code&gt;&lt;/pre&gt;
 </code></pre>
+<pre><code class="language-r">cat(mark('````\n```{r, echo=TRUE}\n1 + 1;\n```\n````'))
+</code></pre>
+<pre><code>&lt;pre&gt;&lt;code&gt;```{r, echo=TRUE}
+1 + 1;
+```
+&lt;/code&gt;&lt;/pre&gt;
+</code></pre>
 <pre><code class="language-r"># raw blocks
 cat(mark('```{=html}\n&lt;p&gt;raw HTML&lt;/p&gt;\n```'))
 </code></pre>

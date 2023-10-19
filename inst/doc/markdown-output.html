@@ -265,16 +265,16 @@ cat(mark(&quot;~~awesome~~&quot;))
 </code></pre>
 <p>~~awesome~~</p>
 <pre><code class="language-r"># superscript and subscript examples
-cat(mark(&quot;2^10^&quot;))
+cat(mark(&quot;2<sup>10</sup>&quot;))
 </code></pre>
 <p>2<sup>10</sup></p>
-<pre><code class="language-r">cat(mark(&quot;2^10^&quot;, options = &quot;-superscript&quot;))
+<pre><code class="language-r">cat(mark(&quot;2<sup>10</sup>&quot;, options = &quot;-superscript&quot;))
 </code></pre>
 <p>2<sup>10</sup></p>
-<pre><code class="language-r">cat(mark(&quot;H~2~O&quot;))
+<pre><code class="language-r">cat(mark(&quot;H<sub>2</sub>O&quot;))
 </code></pre>
 <p>H<sub>2</sub>O</p>
-<pre><code class="language-r">cat(mark(&quot;H~2~O&quot;, options = &quot;-subscript&quot;))
+<pre><code class="language-r">cat(mark(&quot;H<sub>2</sub>O&quot;, options = &quot;-subscript&quot;))
 </code></pre>
 <p>H<sub>2</sub>O</p>
 <pre><code class="language-r"># code blocks
@@ -298,6 +298,12 @@ cat(mark('```r\n1 + 1;\n```'))
 </code></pre>
 <pre><code class="language-r js" id="foo" style="color:red;">1 + 1;
 </code></pre>
+<pre><code class="language-r">cat(mark('````\n```{r, echo=TRUE}\n1 + 1;\n```\n````'))
+</code></pre>
+<pre><code>```{r, echo=TRUE}
+1 + 1;
+```
+</code></pre>
 <pre><code class="language-r"># raw blocks
 cat(mark('```{=html}\n&lt;p&gt;raw HTML&lt;/p&gt;\n```'))
 </code></pre>
@@ -314,7 +320,7 @@ cat(mark(mkd))
 # cat(mark(mkd, options = &quot;tagfilter&quot;))
 </code></pre>
 <pre><code class="language-r"># smartypants example
-cat(mark(&quot;1/2 (c)&quot;))
+cat(mark(&quot;&amp;frac12; &amp;copy;&quot;))
 </code></pre>
 <p>½ ©</p>
 <pre><code class="language-r">mkd &lt;- paste(names(markdown:::pants), collapse = ' ')

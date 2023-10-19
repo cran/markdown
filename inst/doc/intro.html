@@ -145,7 +145,7 @@ section.footnotes::before {
 <div class="frontmatter">
 <div class="title"><h1>An Introduction to the markdown Package</h1></div>
 <div class="author"><h2>Yihui Xie</h2></div>
-<div class="date"><h3>2023-10-09</h3></div>
+<div class="date"><h3>2023-10-18</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -195,9 +195,11 @@ section.footnotes::before {
 <li><a href="#html-articles"><span class="section-number">3.2</span> HTML articles</a></li>
 <li><a href="#external-js-css"><span class="section-number">3.3</span> External JS/CSS</a>
 <ul>
-<li><a href="#right-align-a-quote-footer"><span class="section-number">3.3.1</span> Right-align a quote footer</a></li>
-<li><a href="#add-anchor-links-to-headings"><span class="section-number">3.3.2</span> Add anchor links to headings</a></li>
-<li><a href="#style-keyboard-shortcuts"><span class="section-number">3.3.3</span> Style keyboard shortcuts</a></li>
+<li><a href="#tabbed-sections"><span class="section-number">3.3.1</span> Tabbed sections</a></li>
+<li><a href="#code-folding"><span class="section-number">3.3.2</span> Code folding</a></li>
+<li><a href="#right-align-a-quote-footer"><span class="section-number">3.3.3</span> Right-align a quote footer</a></li>
+<li><a href="#add-anchor-links-to-headings"><span class="section-number">3.3.4</span> Add anchor links to headings</a></li>
+<li><a href="#style-keyboard-shortcuts"><span class="section-number">3.3.5</span> Style keyboard shortcuts</a></li>
 </ul>
 </li>
 </ul>
@@ -233,7 +235,7 @@ are HTML and LaTeX.</p>
 replaced by <strong>commonmark</strong> since v1.3 (2022-10-30). The main advantage of the
 latter is that it follows a clear and widely used spec, i.e., GFM (<a href="https://github.github.com/gfm/">GitHub
 Flavored Markdown</a>), which can be seen as a
-subset of Pandoc’s Markdown.
+subset of <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s Markdown</a>.
 Therefore the <strong>markdown</strong> package can be viewed as a small subset of the
 <strong>rmarkdown</strong> package (the latter is based on Pandoc but the former doesn’t
 depend on external tools). It aims at simplicity, lightweight, and speed, at the
@@ -250,7 +252,7 @@ Below is a quick summary:</p>
 </li>
 <li>
 <p>Inline elements: <code>**strong**</code>, <code>_emphasis_</code>, <code>~~strikethrough~~</code>,
-<code>[text](link)</code>, and <code>![alt](image/path)</code>.</p>
+<code>[text](link)</code>, and <code>![alt](image/path)</code>.<sup class="footnote-ref"><a href="#fn-1" id="fnref-1" data-footnote-ref>1</a></sup></p>
 </li>
 <li>
 <p>Inline code is written in a pair of backticks, e.g., <code>`code`</code>. Code
@@ -330,14 +332,14 @@ with <code>[^n]:</code>. For example:</p>
 
 [^1]: This is the footnote.
 </code></pre>
-<p>The support is limited for LaTeX output at the moment,<sup class="footnote-ref"><a href="#fn-1" id="fnref-1" data-footnote-ref>1</a></sup> and there are two
+<p>The support is limited for LaTeX output at the moment,<sup class="footnote-ref"><a href="#fn-2" id="fnref-2" data-footnote-ref>2</a></sup> and there are two
 caveats if the document is intended to be converted to LaTeX:</p>
 <ul>
 <li>
 <p>The footnote content must be a single paragraph.</p>
 </li>
 <li>
-<p>Only numbers<sup class="footnote-ref"><a href="#fn-2" id="fnref-2" data-footnote-ref>2</a></sup> are supported as identifiers, and other types of
+<p>Only numbers<sup class="footnote-ref"><a href="#fn-3" id="fnref-3" data-footnote-ref>3</a></sup> are supported as identifiers, and other types of
 identifiers are not recognized.</p>
 </li>
 </ul>
@@ -356,7 +358,7 @@ elements in footnotes and not necessarily one paragraph.</p>
 treated as the language name for a block, and the <code>class</code> attribute of the
 result <code>&lt;code&gt;</code> tag will have a <code>language-</code> prefix. For example, the following
 code block</p>
-<pre><code class="language-markdown">```{.foo2w.bar2w#my-code2wstyle=&quot;color:2wred;&quot;}
+<pre><code class="language-markdown">```{.foo .bar #my-code style=&quot;color: red;&quot;}
 ```
 </code></pre>
 <p>will generate the HTML output below:</p>
@@ -469,9 +471,9 @@ write fractions in the form <code>n/m</code>. Below are some example entities:</
 in the <strong>markdown</strong> package. Any feature that you find missing in previous
 sections is likely to be unavailable, such as citations and figure/table
 captions. In addition, a lot of R Markdown and Quarto (both are based on Pandoc)
-features are not supported, either, e.g., tabbed sections and code folding. Some
-HTML features may be implemented via JavaScript, but currently it is not
-straightforward and may be improved in future.</p>
+features are not supported, either. Some HTML features may be implemented via
+JavaScript, but currently it is not straightforward and may be improved in
+future.</p>
 <p>Pandoc can convert Markdown to many output formats, such as Word, PowerPoint,
 LaTeX beamer, and EPUB. The <strong>markdown</strong> package is unlikely to support output
 formats beyond HTML and LaTeX.</p>
@@ -864,18 +866,30 @@ it in <a href="article.html"><code>vignette('article', package = 'markdown')</co
 variables. There are numerous JS libraries and CSS frameworks on the web. Here
 we will only use the JS/CSS from the repo <a href="https://github.com/yihui/misc.js">https://github.com/yihui/misc.js</a> to
 show a few brief examples.</p>
-<h4 id="right-align-a-quote-footer"><span class="section-number">3.3.1</span> Right-align a quote footer</h4>
+<h4 id="tabbed-sections"><span class="section-number">3.3.1</span> Tabbed sections</h4>
+<p>You can load the script <code>tabsets.js</code> and CSS <code>tabsets.css</code> to create tabsets
+from sections (see <a href="https://yihui.org/en/2023/10/section-tabsets/">documentation
+here</a>).</p>
+<pre><code class="language-yaml">css: [&quot;@npm/@xiee/utils/js/tabsets.min.css&quot;]
+js: [&quot;@npm/@xiee/utils/js/tabsets.min.js&quot;]
+</code></pre>
+<h4 id="code-folding"><span class="section-number">3.3.2</span> Code folding</h4>
+<p>Code folding can be supported by <code>fold-details.js</code> (see <a href="https://yihui.org/en/2023/09/code-folding/">documentation
+here</a>).</p>
+<pre><code class="language-yaml">js: [&quot;@npm/@xiee/utils/js/fold-details.min.js&quot;]
+</code></pre>
+<h4 id="right-align-a-quote-footer"><span class="section-number">3.3.3</span> Right-align a quote footer</h4>
 <p>You can use the script <code>right-quote.js</code> to right-align a blockquote footer if it
 starts with an em-dash (<code>---</code>).</p>
 <pre><code class="language-yaml">js: [&quot;@npm/@xiee/utils/js/right-quote.min.js&quot;]
 </code></pre>
-<h4 id="add-anchor-links-to-headings"><span class="section-number">3.3.2</span> Add anchor links to headings</h4>
+<h4 id="add-anchor-links-to-headings"><span class="section-number">3.3.4</span> Add anchor links to headings</h4>
 <p>The CSS is necessary only if you want to hide the anchors by default and reveal
 them on hover.</p>
 <pre><code class="language-yaml">css: [&quot;default&quot;, &quot;@npm/@xiee/utils/css/heading-anchor.min.css&quot;]
 js: [&quot;@npm/@xiee/utils/js/heading-anchor.min.js&quot;]
 </code></pre>
-<h4 id="style-keyboard-shortcuts"><span class="section-number">3.3.3</span> Style keyboard shortcuts</h4>
+<h4 id="style-keyboard-shortcuts"><span class="section-number">3.3.5</span> Style keyboard shortcuts</h4>
 <p>The script <code>key-button.js</code> identifies keys and the CSS styles them, which can be
 useful for <a href="https://yihui.org/en/2023/02/key-buttons/">showing keyboard
 shortcuts</a>.</p>
@@ -927,16 +941,22 @@ resources will also be downloaded and embedded.</p>
 <section class="footnotes" data-footnotes>
 <ol>
 <li id="fn-1">
-<p>If you know C, I’ll truly appreciate it if you could help with the LaTeX
-implementation in GFM: <a href="https://github.com/github/cmark-gfm/issues/314">https://github.com/github/cmark-gfm/issues/314</a> <a href="#fnref-1" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="1" aria-label="Back to reference 1">↩</a></p>
+<p>Please note that for links and images, their URLs <a href="https://spec.commonmark.org/current/#link-destination">should not contain
+spaces</a>. If they do,
+the URLs must be enclosed in <code>&lt;&gt;</code>, e.g.,
+<code>![alt](&lt;some dir/a subdir/foo.png&gt;).</code> <a href="#fnref-1" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="1" aria-label="Back to reference 1">↩</a></p>
 </li>
 <li id="fn-2">
+<p>If you know C, I’ll truly appreciate it if you could help with the LaTeX
+implementation in GFM: <a href="https://github.com/github/cmark-gfm/issues/314">https://github.com/github/cmark-gfm/issues/314</a> <a href="#fnref-2" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="2" aria-label="Back to reference 2">↩</a></p>
+</li>
+<li id="fn-3">
 <p>The specific number doesn’t matter, as long as it’s a unique footnote
 number in the document. For example, the first footnote can be <code>[^100]</code> and
 the second can be <code>[^64]</code>. Eventually they will appear as <code>[1]</code> and <code>[2]</code>.
 If you use the RStudio visual editor to edit Markdown documents, the
 footnote numbers will be automatically generated and updated when new
-footnotes are inserted before existing footnotes. <a href="#fnref-2" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="2" aria-label="Back to reference 2">↩</a></p>
+footnotes are inserted before existing footnotes. <a href="#fnref-3" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="3" aria-label="Back to reference 3">↩</a></p>
 </li>
 </ol>
 </section>
