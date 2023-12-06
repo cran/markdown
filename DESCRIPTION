@@ -1,7 +1,7 @@
 Package: markdown
 Type: Package
 Title: Render Markdown with 'commonmark'
-Version: 1.11
+Version: 1.12
 Authors@R: c(
    person("Yihui", "Xie", role = c("aut", "cre"), email = "xie@yihui.name", comment = c(ORCID = "0000-0003-0645-5666")),
    person("JJ", "Allaire", role = "aut"),
@@ -34,7 +34,7 @@ VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2023-10-18 22:22:02 UTC; yihui
+Packaged: 2023-12-05 14:26:48 UTC; yihui
 Author: Yihui Xie [aut, cre] (<https://orcid.org/0000-0003-0645-5666>),
   JJ Allaire [aut],
   Jeffrey Horner [aut],
@@ -51,4 +51,4 @@ Author: Yihui Xie [aut, cre] (<https://orcid.org/0000-0003-0645-5666>),
   Posit Software, PBC [cph, fnd]
 Maintainer: Yihui Xie <xie@yihui.name>
 Repository: CRAN
-Date/Publication: 2023-10-19 07:00:05 UTC
+Date/Publication: 2023-12-06 00:20:02 UTC
