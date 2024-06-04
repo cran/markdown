@@ -76,12 +76,7 @@ mark = function(
   )
   meta = normalize_meta(meta)
 
-  if (missing(output) && is_file(file)) {
-    ext = switch(format, commonmark = 'markdown', latex = 'tex', text = 'txt', format)
-    output = xfun::with_ext(file, ext)
-    if (xfun::same_path(file, output))
-      stop('The output file path is the same as input: ', file)
-  }
+  if (missing(output) && is_file(file)) output = auto_output(file, format)
 
   render_fun = tryCatch(
     getFromNamespace(paste0('markdown_', tolower(format)), 'commonmark'),
@@ -106,7 +101,7 @@ mark = function(
   render = function(x, clean = FALSE) {
     if (length(x) == 0) return(x)
     res = do.call(render_fun, c(list(text = x), render_args))
-    if (clean) res = gsub('^<p>|(</p>)?\n$', '', res)
+    if (clean) res = gsub('^<p[^>]*>|(</p>)?\n$', '', res)
     res
   }
 
@@ -381,7 +376,7 @@ markdown_options = function() {
   # options enabled by default
   x1 = c(
     'smart', 'smartypants', 'embed_resources', 'js_math', 'js_highlight',
-    'superscript', 'subscript', 'latex_math', if (!check_old()) 'auto_identifiers',
+    'superscript', 'subscript', 'latex_math', 'auto_identifiers',
     setdiff(commonmark::list_extensions(), 'tagfilter')
   )
   # options disabled by default

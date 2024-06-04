@@ -78,6 +78,19 @@ is_file = function(x) {
   length(x) == 1 && !inherits(x, 'AsIs') && suppressWarnings(xfun::file_exists(x))
 }
 
+# make an output filename with the format name
+auto_output = function(input, format) {
+  ext = switch(format, commonmark = 'markdown', latex = 'tex', text = 'txt', format)
+  output = xfun::with_ext(input, ext)
+  check_output(input, output)
+}
+
+# make sure not to overwrite input file inadvertently
+check_output = function(input, output) {
+  if (xfun::same_path(input, output))
+    stop('The output file path is the same as input: ', input)
+}
+
 # substitute a variable in template `x` with its value; the variable may have
 # more than one possible name, in which case we try them one by one
 sub_var = function(x, name, value) {
@@ -853,13 +866,7 @@ add_html_deps = function(meta, output, embed = TRUE) {
 
 # compact HTML code
 clean_html = function(x) {
-  # TODO: remove this hack (https://github.com/rstudio/plumbertableau/pull/84)
-  if (check_old()) return(gsub('>\n<p>', '>\n\n<p>', x))  # double \n
   x = gsub('\n+(\n<[a-z1-6]+[^>]*>|\n</(body|div|head|html)>)', '\\1', x)
   # can also merge <style>/<script> tags (<style type="text/css">).+?</style>\\s*\\1
   x
-}
-
-check_old = function() {
-  xfun::check_old_package('plumbertableau', '0.1.0')
 }
